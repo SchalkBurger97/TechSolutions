@@ -1,0 +1,145 @@
+﻿@{
+    ViewBag.Title = "Dashboard";
+}
+
+<div class="app-theme">
+    <div class="container-fluid py-4">
+
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h2>Dashboard</h2>
+                <p class="text-muted">Welcome to TechSolutions Customer Management System</p>
+            </div>
+        </div>
+
+        <!-- Metric Cards -->
+        <div class="row mb-4">
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Total Customers</h6>
+                        <h2 class="card-title text-primary">@ViewBag.TotalCustomers</h2>
+                        <p class="card-text small">
+                            <i class="glyphicon glyphicon-arrow-up"></i> Active accounts
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">New This Month</h6>
+                        <h2 class="card-title text-primary">@ViewBag.NewThisMonth</h2>
+                        <p class="card-text small">
+                            <i class="glyphicon glyphicon-plus"></i> Recently added
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Average Quality</h6>
+                        <h2 class="card-title text-primary">@ViewBag.AverageQuality%</h2>
+                        <p class="card-text small">
+                            <i class="glyphicon glyphicon-ok"></i> Data integrity
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Quality Issues</h6>
+                        <h2 class="card-title text-primary">@ViewBag.IssuesCount</h2>
+                        <p class="card-text small">
+                            <i class="glyphicon glyphicon-exclamation-sign"></i> Needs attention
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card" style="height:100%">
+                    <div class="card-header">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+
+                            <a href="@Url.Action("Create", "Customer")" class="list-group-item list-group-item-action">
+                                <i class="glyphicon glyphicon-plus"></i> Add New Customer
+                            </a>
+
+                            <a href="@Url.Action("Index", "Customer")" class="list-group-item list-group-item-action">
+                                <i class="glyphicon glyphicon-list"></i> View All Customers
+                            </a>
+
+                            <a href="@Url.Action("Index", "DataQuality")" class="list-group-item list-group-item-action">
+                                <i class="glyphicon glyphicon-ok-circle"></i> Check Data Quality
+                            </a>
+
+                            <a href="@Url.Action("Export", "Reports")" class="list-group-item list-group-item-action">
+                                <i class="glyphicon glyphicon-download-alt"></i> Export Reports
+                            </a>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">System Status</h5>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="alert alert-primary">
+                            <strong><i class="glyphicon glyphicon-ok"></i> All Systems Operational</strong>
+                            <p class="mb-0 small">SQL Server connected and running smoothly</p>
+                        </div>
+
+                        <ul class="list-unstyled">
+                            <li><i class="glyphicon glyphicon-ok text-primary"></i> Database: TechSolutionsDB</li>
+                            <li><i class="glyphicon glyphicon-ok text-primary"></i> Server: SQL Server Express</li>
+                            <li><i class="glyphicon glyphicon-ok text-primary"></i> Authentication: Active</li>
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Getting Started -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Getting Started</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Welcome to TechSolutions Customer Management System. Here's how to get started:</p>
+                        <ol>
+                            <li><strong>Add Your First Customer:</strong> Click "Add New Customer"</li>
+                            <li><strong>View Customer List:</strong> Navigate to "Customers"</li>
+                            <li><strong>Monitor Data Quality:</strong> Check the "Data Quality" page</li>
+                            <li><strong>Generate Reports:</strong> Use the Reports section</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,190 @@
+﻿/* Set padding to keep content from hitting the edges */
+.body-content {
+    margin-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+/* GLOBAL THEME VARIABLES */
+.app-theme {
+    --color-primary: #0477bf;
+    --color-secondary: #04c4d9;
+    --color-bg: #dceaf2;
+    --color-dark: #14110f;
+    --color-muted: #34312d;
+    --color-text: #14110f;
+    --color-text-light: #ffffff;
+    --border-radius: 8px;
+    --transition: all 0.25s ease;
+}
+
+    /* PAGE DEFAULTS */
+    .app-theme body,
+    .app-theme {
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+        /* HEADINGS */
+        .app-theme h1,
+        .app-theme h2,
+        .app-theme h3,
+        .app-theme h4,
+        .app-theme h5,
+        .app-theme h6 {
+            color: var(--heading-color, var(--color-primary));
+        }
+
+/* Default (already primary) */
+.app-theme {
+    --heading-color: var(--color-primary);
+}
+
+    /* Card headers override */
+    .app-theme .card-header {
+        --heading-color: var(--color-text-light);
+        background-color: var(--color-primary);
+        color: var(--color-text-light);
+    }
+
+    /* LINKS */
+    .app-theme a {
+        color: var(--color-primary);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+        .app-theme a:hover {
+            color: var(--color-secondary);
+        }
+
+    /* BUTTONS (BOOTSTRAP OVERRIDE) */
+    .app-theme .btn {
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+    }
+
+    /* Primary Button */
+    .app-theme .btn-primary {
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
+        color: var(--color-text-light);
+    }
+
+        .app-theme .btn-primary:hover {
+            background-color: var(--color-secondary);
+            border-color: var(--color-secondary);
+        }
+
+    /* Secondary Button */
+    .app-theme .btn-secondary {
+        background-color: var(--color-muted);
+        border-color: var(--color-muted);
+        color: var(--color-text-light);
+    }
+
+        .app-theme .btn-secondary:hover {
+            background-color: var(--color-dark);
+            border-color: var(--color-dark);
+        }
+
+    /* Outline Buttons */
+    .app-theme .btn-outline-primary {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+    }
+
+        .app-theme .btn-outline-primary:hover {
+            background-color: var(--color-primary);
+            color: #fff;
+        }
+
+    /* NAVBAR */
+    .app-theme .navbar {
+        background-color: var(--color-dark) !important;
+    }
+
+    .app-theme .navbar-brand,
+    .app-theme .navbar-nav .nav-link {
+        color: var(--color-bg) !important;
+    }
+
+        .app-theme .navbar-nav .nav-link:hover {
+            color: var(--color-secondary) !important;
+        }
+
+    /* CARDS */
+    .app-theme .card {
+        border-radius: var(--border-radius);
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .app-theme .card-header {
+        background: linear-gradient( 135deg, var(--color-primary), var(--color-secondary) );
+        color: var(--color-text-light);
+    }
+
+    /* FORMS */
+    .app-theme .form-control,
+    .app-theme .form-select {
+        border-radius: var(--border-radius);
+        border: 1px solid #ccc;
+        transition: var(--transition);
+    }
+
+        .app-theme .form-control:focus,
+        .app-theme .form-select:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 0.2rem rgba(4, 119, 191, 0.25);
+        }
+
+    /* TABLES */
+    .app-theme .table thead {
+        background-color: var(--color-primary);
+        color: #fff;
+    }
+
+    .app-theme .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(4, 196, 217, 0.05);
+    }
+
+    /* BADGES */
+    .app-theme .badge.bg-primary {
+        background-color: var(--color-primary) !important;
+    }
+
+    /* ALERTS */
+    .app-theme .alert-primary {
+        background-color: rgba(4, 119, 191, 0.1);
+        border-color: var(--color-primary);
+        color: var(--color-dark);
+    }
+
+    /* UTILITIES */
+    .app-theme .text-primary {
+        color: var(--color-primary) !important;
+    }
+
+    .app-theme .bg-primary {
+        background-color: var(--color-primary) !important;
+    }
+
+    .app-theme .bg-dark {
+        background-color: var(--color-dark) !important;
+    }
