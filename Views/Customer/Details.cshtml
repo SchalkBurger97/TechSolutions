@@ -1,0 +1,651 @@
+﻿@model TechSolutions.Models.Customer
+
+@{
+    ViewBag.Title = "Customer Details";
+}
+
+<div class="app-theme">
+    <!-- Toast Alerts -->
+    @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+    {
+        <div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible app-toast" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #3c763d; background-color: #dff0d8; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #3c763d; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #3c763d;"><i class="fa fa-check-circle"></i> Success!</strong>
+                        <div style="margin-top: 5px; color: #3c763d;">@TempData["SuccessMessage"]</div>
+                    </div>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible app-toast app-toast-error" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #a94442; background-color: #f2dede; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #a94442; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #a94442;"><i class="fa fa-exclamation-triangle"></i> Error!</strong>
+                        <div style="margin-top: 5px; color: #a94442;">@TempData["ErrorMessage"]</div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="container-fluid">
+        <!-- Back Button -->
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-md-12">
+                <a href="@Url.Action("Index")" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Back to Customer List
+                </a>
+            </div>
+        </div>
+
+        <!-- Customer Header Card -->
+        <div class="panel panel-primary">
+            <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
+                <h3 class="panel-title" style="color: #fff; font-size: 18px; margin: 0;">
+                    <i class="fa fa-user"></i> Customer Profile
+                </h3>
+            </div>
+            <div class="panel-body" style="padding: 25px;">
+                <div class="row">
+                    <!-- Customer Avatar -->
+                    <div class="col-md-2 text-center">
+                        @{
+                            var initials = (Model.FirstName?.Substring(0, 1) ?? "") + (Model.LastName?.Substring(0, 1) ?? "");
+                        }
+                        <div class="avatar-circle" style="width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <span class="initials" style="color: white; font-size: 36px; font-weight: bold;">@initials</span>
+                        </div>
+                    </div>
+
+                    <!-- Customer Info -->
+                    <div class="col-md-7">
+                        <h2 style="margin-top: 0; color: var(--color-primary);">@Model.FullName</h2>
+                        <p style="color: #666; margin-bottom: 20px;">
+                            <strong>Customer Code:</strong> <span style="color: var(--color-primary); font-weight: 600;">@Model.CustomerCode</span>
+                            <span style="margin: 0 10px;">|</span>
+                            <strong>Type:</strong>
+                            <span class="label label-info" style="background-color: #d9edf7; color: #31708f; border: 1px solid #31708f; font-weight: 600; font-size: 12px;">
+                                @Model.CustomerType
+                            </span>
+                            <span style="margin: 0 10px;">|</span>
+                            <strong>Status:</strong>
+                            @if (Model.IsActive)
+                            {
+                                <span class="label label-success" style="background-color: #d4edda; color: #3c763d; border: 1px solid #3c763d; font-weight: 600; font-size: 12px;">
+                                    <i class="fa fa-check-circle"></i> Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="label label-danger" style="background-color: #f2dede; color: #a94442; border: 1px solid #a94442; font-weight: 600; font-size: 12px;">
+                                    <i class="fa fa-times-circle"></i> Inactive
+                                </span>
+                            }
+                        </p>
+
+                        <!-- Key Metrics Row -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="metric-box" style="background: #fff; padding: 15px; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center;">
+                                    <div style="font-size: 11px; color: #777; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">Data Quality</div>
+                                    @{
+                                        var qualityColor = Model.DataQualityScore >= 80 ? "#3c763d" :
+                                                          Model.DataQualityScore >= 60 ? "#8a6d3b" : "#a94442";
+                                        var qualityBg = Model.DataQualityScore >= 80 ? "#d4edda" :
+                                                       Model.DataQualityScore >= 60 ? "#fcf8e3" : "#f2dede";
+                                    }
+                                    <div>
+                                        <span class="label" style="background-color: @qualityBg; color: @qualityColor; border: 1px solid @qualityColor; font-weight: 600; font-size: 16px; padding: 6px 12px;">
+                                            @Model.DataQualityScore%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-box" style="background: #fff; padding: 15px; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center;">
+                                    <div style="font-size: 11px; color: #777; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">Risk Score</div>
+                                    @{
+                                        var riskColor = Model.RiskScore < 30 ? "#3c763d" :
+                                                       Model.RiskScore < 60 ? "#8a6d3b" : "#a94442";
+                                        var riskBg = Model.RiskScore < 30 ? "#d4edda" :
+                                                    Model.RiskScore < 60 ? "#fcf8e3" : "#f2dede";
+                                    }
+                                    <div>
+                                        <span class="label" style="background-color: @riskBg; color: @riskColor; border: 1px solid @riskColor; font-weight: 600; font-size: 16px; padding: 6px 12px;">
+                                            @Model.RiskScore/100
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="metric-box" style="background: #fff; padding: 15px; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center;">
+                                    <div style="font-size: 11px; color: #777; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">Member Since</div>
+                                    <div style="font-size: 14px; font-weight: 600; color: var(--color-primary);">
+                                        @Model.CreatedDate.ToString("MMM dd, yyyy")
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-md-3 text-right">
+                        <a href="@Url.Action("Edit", new { id = Model.CustomerID })" class="btn btn-primary btn-block w-75" style="margin-bottom: 10px;float:right">
+                            <i class="fa fa-pencil"></i> Edit Customer
+                        </a>
+                        <button type="button" class="btn btn-danger btn-block w-75" style="margin-bottom: 10px;float:right" onclick="confirmDelete(@Model.CustomerID, '@Model.FullName')">
+                            <i class="fa fa-trash"></i> Delete Customer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Tabs -->
+        <div class="row">
+            <div class="col-md-12">
+                <!-- Nav Tabs -->
+                <ul class="nav nav-tabs" role="tablist" style="border-bottom: 2px solid var(--color-bg); margin-bottom: 0;">
+                    <li role="presentation" class="active">
+                        <a href="#overview" aria-controls="overview" role="tab" data-toggle="tab" style="font-weight: 600;">
+                            <i class="fa fa-info-circle"></i> Overview
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#contact" aria-controls="contact" role="tab" data-toggle="tab" style="font-weight: 600;">
+                            <i class="fa fa-envelope"></i> Contact Information
+                        </a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#additional" aria-controls="additional" role="tab" data-toggle="tab" style="font-weight: 600;">
+                            <i class="fa fa-list"></i> Additional Details
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" style="background: #fff; padding: 25px; border-radius: 0 0 var(--border-radius) var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                    <!-- Overview Tab -->
+                    <div role="tabpanel" class="tab-pane active" id="overview">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4 style="color: var(--color-primary); margin-top: 0; border-bottom: 2px solid var(--color-bg); padding-bottom: 10px; margin-bottom: 20px;">
+                                    <i class="fa fa-user"></i> Personal Information
+                                </h4>
+                                <table class="table table-condensed table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">First Name:</td>
+                                            <td style="padding: 8px 0;"><strong>@Model.FirstName</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Last Name:</td>
+                                            <td style="padding: 8px 0;"><strong>@Model.LastName</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Date of Birth:</td>
+                                            <td style="padding: 8px 0;">
+                                                @if (Model.DateOfBirth.HasValue)
+                                                {
+                                                    @Model.DateOfBirth.Value.ToString("MMMM dd, yyyy")
+                                                    <span style="color: #999;">
+                                                        (@((DateTime.Now.Year - Model.DateOfBirth.Value.Year)) years old)
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #999;">Not provided</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Gender:</td>
+                                            <td style="padding: 8px 0;">@(Model.Gender ?? "Not specified")</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h4 style="color: var(--color-primary); margin-top: 0; border-bottom: 2px solid var(--color-bg); padding-bottom: 10px; margin-bottom: 20px;">
+                                    <i class="fa fa-id-card"></i> Account Information
+                                </h4>
+                                <table class="table table-condensed table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Customer Code:</td>
+                                            <td style="padding: 8px 0;"><strong style="color: var(--color-primary);">@Model.CustomerCode</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Customer Type:</td>
+                                            <td style="padding: 8px 0;">
+                                                <span class="label label-info" style="background-color: #d9edf7; color: #31708f; border: 1px solid #31708f; font-weight: 600;">
+                                                    @Model.CustomerType
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Status:</td>
+                                            <td style="padding: 8px 0;">
+                                                @if (Model.IsActive)
+                                                {
+                                                    <span class="label label-success" style="background-color: #d4edda; color: #3c763d; border: 1px solid #3c763d; font-weight: 600;">
+                                                        <i class="fa fa-check-circle"></i> Active
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="label label-danger" style="background-color: #f2dede; color: #a94442; border: 1px solid #a94442; font-weight: 600;">
+                                                        <i class="fa fa-times-circle"></i> Inactive
+                                                    </span>
+                                                }
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Created Date:</td>
+                                            <td style="padding: 8px 0;">@Model.CreatedDate.ToString("MMMM dd, yyyy HH:mm")</td>
+                                        </tr>
+                                        @if (Model.ModifiedDate.HasValue)
+                                        {
+                                            <tr>
+                                                <td style="width: 40%; color: #666; font-weight: 600; padding: 8px 0;">Last Modified:</td>
+                                                <td style="padding: 8px 0;">@Model.ModifiedDate.Value.ToString("MMMM dd, yyyy HH:mm")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information Tab -->
+                    <div role="tabpanel" class="tab-pane" id="contact">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" style="background: var(--color-bg); border: none;">
+                                        <h4 class="panel-title" style="color: var(--color-primary); margin: 0;">
+                                            <i class="fa fa-envelope"></i> Email & Phone
+                                        </h4>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div style="margin-bottom: 20px;">
+                                            <div style="font-size: 11px; color: #777; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</div>
+                                            <div style="font-size: 16px; font-weight: 500;">
+                                                @if (!string.IsNullOrWhiteSpace(Model.Email))
+                                                {
+                                                    <a href="mailto:@Model.Email" style="color: var(--color-primary);">
+                                                        <i class="fa fa-envelope"></i> @Model.Email
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #999;">No email provided</span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div style="font-size: 11px; color: #777; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">Phone Number</div>
+                                            <div style="font-size: 16px; font-weight: 500;">
+                                                @if (!string.IsNullOrWhiteSpace(Model.Phone))
+                                                {
+                                                    <i class="fa fa-phone"></i>
+                                                    @Model.Phone
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #999;">No phone provided</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" style="background: var(--color-bg); border: none;">
+                                        <h4 class="panel-title" style="color: var(--color-primary); margin: 0;">
+                                            <i class="fa fa-map-marker"></i> Address
+                                        </h4>
+                                    </div>
+                                    <div class="panel-body">
+                                        @if (!string.IsNullOrWhiteSpace(Model.Address) ||
+                                             !string.IsNullOrWhiteSpace(Model.City) ||
+                                             !string.IsNullOrWhiteSpace(Model.Province))
+                                        {
+                                            <address style="margin: 0; line-height: 1.8;">
+                                                @if (!string.IsNullOrWhiteSpace(Model.Address))
+                                                {
+                                                    <div><i class="fa fa-home" style="width: 20px;"></i> @Model.Address</div>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(Model.City))
+                                                {
+                                                    <div>
+                                                        <i class="fa fa-map-marker" style="width: 20px;"></i>
+                                                        @Model.City@if (!string.IsNullOrWhiteSpace(Model.PostalCode))
+                                                        {<text>, </text>@Model.PostalCode}
+                                                    </div>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(Model.Province))
+                                                {
+                                                    <div><i class="fa fa-globe" style="width: 20px;"></i> @Model.Province</div>
+                                                }
+                                                <div><i class="fa fa-flag" style="width: 20px;"></i> <strong>South Africa</strong></div>
+                                            </address>
+                                        }
+                                        else
+                                        {
+                                            <p style="color: #999; margin: 0;">No address provided</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Details Tab -->
+                    <div role="tabpanel" class="tab-pane" id="additional">
+                        <h4 style="color: var(--color-primary); margin-top: 0; border-bottom: 2px solid var(--color-bg); padding-bottom: 10px; margin-bottom: 20px;">
+                            <i class="fa fa-bar-chart"></i> Data Quality Analysis
+                        </h4>
+                        <div class="well" style="background: var(--color-bg); border: none; border-radius: var(--border-radius);">
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    @{
+                                        var overallColor = Model.DataQualityScore >= 80 ? "#5cb85c" :
+                                                          Model.DataQualityScore >= 60 ? "#f0ad4e" : "#d9534f";
+                                    }
+                                    <div style="font-size: 48px; font-weight: bold; color: @overallColor;">
+                                        @Model.DataQualityScore%
+                                    </div>
+                                    <div style="color: #777; font-size: 13px;">Overall Quality Score</div>
+                                </div>
+                                <div class="col-md-9">
+                                    <h5 style="margin-top: 0; color: var(--color-primary);">Quality Breakdown:</h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled" style="line-height: 2;">
+                                                <li>
+                                                    <i class="fa fa-@(string.IsNullOrWhiteSpace(Model.FirstName) || string.IsNullOrWhiteSpace(Model.LastName) ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    Name information
+                                                </li>
+                                                <li>
+                                                    <i class="fa fa-@(string.IsNullOrWhiteSpace(Model.Email) ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    Email address
+                                                </li>
+                                                <li>
+                                                    <i class="fa fa-@(string.IsNullOrWhiteSpace(Model.Phone) ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    Phone number
+                                                </li>
+                                                <li>
+                                                    <i class="fa fa-@(!Model.DateOfBirth.HasValue ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    Date of birth
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled" style="line-height: 2;">
+                                                <li>
+                                                    <i class="fa fa-@(string.IsNullOrWhiteSpace(Model.Address) ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    Physical address
+                                                </li>
+                                                <li>
+                                                    <i class="fa fa-@(string.IsNullOrWhiteSpace(Model.City) ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    City information
+                                                </li>
+                                                <li>
+                                                    <i class="fa fa-@(string.IsNullOrWhiteSpace(Model.Province) ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    Province information
+                                                </li>
+                                                <li>
+                                                    <i class="fa fa-@(string.IsNullOrWhiteSpace(Model.PostalCode) ? "times-circle text-danger" : "check-circle text-success")"></i>
+                                                    Postal code
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 style="color: var(--color-primary); margin-top: 30px; border-bottom: 2px solid var(--color-bg); padding-bottom: 10px; margin-bottom: 20px;">
+                            <i class="fa fa-cog"></i> System Information
+                        </h4>
+                        <table class="table table-striped">
+                            <tbody>
+                                <tr>
+                                    <td style="width: 30%; font-weight: 600; color: #666;">Customer ID:</td>
+                                    <td>@Model.CustomerID</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #666;">Customer Code:</td>
+                                    <td><strong style="color: var(--color-primary);">@Model.CustomerCode</strong></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600; color: #666;">Created Date:</td>
+                                    <td>@Model.CreatedDate.ToString("MMMM dd, yyyy HH:mm:ss")</td>
+                                </tr>
+                                @if (Model.ModifiedDate.HasValue)
+                                {
+                                    <tr>
+                                        <td style="font-weight: 600; color: #666;">Last Modified:</td>
+                                        <td>@Model.ModifiedDate.Value.ToString("MMMM dd, yyyy HH:mm:ss")</td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td style="font-weight: 600; color: #666;">Risk Score:</td>
+                                    <td>
+                                        @{
+                                            var riskColor2 = Model.RiskScore < 30 ? "#3c763d" :
+                                                            Model.RiskScore < 60 ? "#8a6d3b" : "#a94442";
+                                            var riskBg2 = Model.RiskScore < 30 ? "#d4edda" :
+                                                         Model.RiskScore < 60 ? "#fcf8e3" : "#f2dede";
+                                        }
+                                        <span class="label" style="background-color: @riskBg2; color: @riskColor2; border: 1px solid @riskColor2; font-weight: 600;">
+                                            @Model.RiskScore/100
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Information Panel -->
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
+                        <h4 class="panel-title" style="color: #fff; margin: 0;">
+                            <i class="fa fa-folder-open"></i> Related Information & Management
+                        </h4>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <!-- ID Documents Card -->
+                            <div class="col-md-3">
+                                <div class="info-card" onclick="location.href='@Url.Action("Index", "Documents", new { customerId = Model.CustomerID })'" style="cursor: pointer; transition: var(--transition); border: 2px solid #f0ad4e;">
+                                    <div style="text-align: center; padding: 20px 15px; background: #fcf8e3; border-radius: var(--border-radius); margin-bottom: 15px;">
+                                        <i class="fa fa-id-card fa-3x" style="color: #8a6d3b;"></i>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <h5 style="color: var(--color-primary); margin: 0 0 10px 0;">ID Documents</h5>
+                                        <p style="color: #666; margin-bottom: 10px;">
+                                            <span class="badge" style="background: #8a6d3b;">0</span> on file
+                                        </p>
+                                        <small style="color: #d9534f;"><i class="fa fa-lock"></i> Secure</small>
+                                    </div>
+                                    <div style="text-align: center; margin-top: 15px;">
+                                        <span class="btn btn-sm btn-warning" style="background: #f0ad4e; border-color: #f0ad4e;">
+                                            Manage <i class="fa fa-arrow-right"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Methods Card -->
+                            <div class="col-md-3">
+                                <div class="info-card" onclick="location.href='@Url.Action("Index", "Payment", new { customerId = Model.CustomerID })'" style="cursor: pointer; transition: var(--transition); border: 2px solid #5cb85c;">
+                                    <div style="text-align: center; padding: 20px 15px; background: #d4edda; border-radius: var(--border-radius); margin-bottom: 15px;">
+                                        <i class="fa fa-credit-card fa-3x" style="color: #3c763d;"></i>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <h5 style="color: var(--color-primary); margin: 0 0 10px 0;">Payment Methods</h5>
+                                        <p style="color: #666; margin-bottom: 10px;">
+                                            <span class="badge" style="background: #3c763d;">0</span> methods
+                                        </p>
+                                        <small style="color: #d9534f;"><i class="fa fa-lock"></i> Encrypted</small>
+                                    </div>
+                                    <div style="text-align: center; margin-top: 15px;">
+                                        <span class="btn btn-sm btn-success" style="background: #5cb85c; border-color: #5cb85c;">
+                                            Manage <i class="fa fa-arrow-right"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Medical Clearance Card -->
+                            <div class="col-md-3">
+                                <div class="info-card" onclick="location.href='@Url.Action("Manage", "Clearance", new { customerId = Model.CustomerID })'" style="cursor: pointer; transition: var(--transition); border: 2px solid #5bc0de;">
+                                    <div style="text-align: center; padding: 20px 15px; background: #d9edf7; border-radius: var(--border-radius); margin-bottom: 15px;">
+                                        <i class="fa fa-medkit fa-3x" style="color: #31708f;"></i>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <h5 style="color: var(--color-primary); margin: 0 0 10px 0;">Medical Clearance</h5>
+                                        <p style="color: #666; margin-bottom: 10px;">
+                                            <span class="label label-default" style="background: #999;">Not Set</span>
+                                        </p>
+                                        <small style="color: #666;">For on-site training</small>
+                                    </div>
+                                    <div style="text-align: center; margin-top: 15px;">
+                                        <span class="btn btn-sm btn-info" style="background: #5bc0de; border-color: #5bc0de;">
+                                            View <i class="fa fa-arrow-right"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Enrollments Card -->
+                            <div class="col-md-3">
+                                <div class="info-card" onclick="location.href='@Url.Action("Index", "Enrollments", new { customerId = Model.CustomerID })'" style="cursor: pointer; transition: var(--transition); border: 2px solid #337ab7;">
+                                    <div style="text-align: center; padding: 20px 15px; background: #d9edf7; border-radius: var(--border-radius); margin-bottom: 15px;">
+                                        <i class="fa fa-graduation-cap fa-3x" style="color: #337ab7;"></i>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <h5 style="color: var(--color-primary); margin: 0 0 10px 0;">Course Enrollments</h5>
+                                        <p style="color: #666; margin-bottom: 10px;">
+                                            <span class="badge" style="background: #337ab7;">0</span> courses
+                                        </p>
+                                        <small style="color: #666;">Training history</small>
+                                    </div>
+                                    <div style="text-align: center; margin-top: 15px;">
+                                        <span class="btn btn-sm btn-primary" style="background: #337ab7; border-color: #337ab7;">
+                                            View <i class="fa fa-arrow-right"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden form for delete -->
+    <form id="deleteForm" method="post" style="display:none;">
+        @Html.AntiForgeryToken()
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Properly handle tab clicks and update active state
+            $('.nav-tabs a').on('click', function (e) {
+                e.preventDefault();
+
+                // Remove active from all tabs
+                $('.nav-tabs li').removeClass('active');
+
+                // Add active to clicked tab
+                $(this).parent('li').addClass('active');
+
+                // Show the corresponding tab content
+                var target = $(this).attr('href');
+                $('.tab-pane').removeClass('active');
+                $(target).addClass('active');
+            });
+
+            // Toast animations
+            $('.app-toast').each(function (index) {
+                var $toast = $(this);
+                $toast.css({
+                    'opacity': '0',
+                    'transform': 'translateX(400px)'
+                });
+
+                setTimeout(function () {
+                    $toast.animate({
+                        'opacity': '1'
+                    }, 400);
+                    $toast.css({
+                        'transform': 'translateX(0)',
+                        'transition': 'transform 0.4s ease-out'
+                    });
+                }, index * 100);
+            });
+        });
+
+        function confirmDelete(customerId, customerName) {
+            if (confirm('Are you sure you want to delete customer: ' + customerName + '?\n\nThis action cannot be undone.')) {
+                var form = document.getElementById('deleteForm');
+                form.action = '@Url.Action("Delete", "Customer")' + '/' + customerId;
+                form.submit();
+            }
+        }
+
+        // Auto-hide ONLY success messages
+        setTimeout(function () {
+            $('.app-toast:not(.app-toast-error)').each(function (index) {
+                var $toast = $(this);
+                setTimeout(function () {
+                    $toast.css({
+                        'transform': 'translateX(400px)',
+                        'transition': 'all 0.3s ease-in',
+                        'opacity': '0'
+                    });
+                    setTimeout(function () {
+                        $toast.remove();
+                    }, 300);
+                }, index * 100);
+            });
+        }, 5000);
+
+        // Manual close
+        $('.app-toast-close').on('click', function () {
+            var $toast = $(this).closest('.app-toast');
+            $toast.css({
+                'transform': 'translateX(400px)',
+                'transition': 'all 0.3s ease-in',
+                'opacity': '0'
+            });
+            setTimeout(function () {
+                $toast.remove();
+            }, 300);
+        });
+    </script>
+}

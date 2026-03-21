@@ -1,0 +1,456 @@
+﻿@model TechSolutions.Models.Customer
+
+@{
+    ViewBag.Title = "New Customer Enrollment";
+    int currentStep = ViewBag.CurrentStep ?? 1;
+}
+<div class="app-theme">
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-md-offset-1" style="width:100%">
+                <!-- Wizard Header -->
+                <div class="page-header">
+                    <h2>New Customer Enrollment</h2>
+                    <p class="text-muted">Complete the steps below to enroll a new learner</p>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="wizard-steps">
+                    <div class="step @(currentStep >= 1 ? "active" : "") @(currentStep > 1 ? "completed" : "")">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Basic Info</div>
+                    </div>
+                    <div class="step @(currentStep >= 2 ? "active" : "") @(currentStep > 2 ? "completed" : "")">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Address</div>
+                    </div>
+                    <div class="step @(currentStep >= 3 ? "active" : "") @(currentStep > 3 ? "completed" : "")">
+                        <div class="step-number">3</div>
+                        <div class="step-label">ID Documents</div>
+                    </div>
+                    <div class="step @(currentStep >= 4 ? "active" : "") @(currentStep > 4 ? "completed" : "")">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Payment</div>
+                    </div>
+                    <div class="step @(currentStep >= 5 ? "active" : "") @(currentStep > 5 ? "completed" : "")">
+                        <div class="step-number">5</div>
+                        <div class="step-label">Clearance</div>
+                    </div>
+                    <div class="step @(currentStep == 6 ? "active" : "")">
+                        <div class="step-number">6</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                </div>
+
+                <!-- Wizard Form -->
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        @using (Html.BeginForm("Wizard", "Customer", FormMethod.Post, new { @class = "form-horizontal" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+                            @Html.HiddenFor(m => m.CustomerID)
+                            @Html.HiddenFor(m => m.CustomerCode)
+                            @Html.Hidden("currentStep", currentStep)
+
+                            <!-- STEP 1: Basic Information -->
+                            if (currentStep == 1)
+                            {
+                                <h3>Step 1: Basic Information</h3>
+                                <hr />
+
+                                <!-- Customer Code (FULL WIDTH - unchanged) -->
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.CustomerCode, new { @class = "col-md-3 control-label" })
+                                    <div class="col-md-9">
+                                        <p class="form-control-static"><strong>@Model.CustomerCode</strong></p>
+                                    </div>
+                                </div>
+
+                                <!-- START 2 COLUMN LAYOUT -->
+                                <div class="row">
+
+                                    <!-- LEFT COLUMN -->
+                                    <div class="col-md-6">
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.FirstName, new { @class = "control-label" })
+                                            @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", placeholder = "Enter first name", required = "required" })
+                                            @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                                            <span class="help-block">Required field</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.Email, new { @class = "control-label" })
+                                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "example@email.com", required = "required" })
+                                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                                            <span class="help-block">Valid email address required</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.CustomerType, new { @class = "control-label" })
+                                            @Html.DropDownListFor(m => m.CustomerType, (SelectList)ViewBag.CustomerTypes, "Select learner type...", new { @class = "form-control", required = "required" })
+                                            @Html.ValidationMessageFor(m => m.CustomerType, "", new { @class = "text-danger" })
+                                        </div>
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.Gender, new { @class = "control-label" })
+                                            @Html.DropDownListFor(m => m.Gender, (SelectList)ViewBag.Genders, "Select gender...", new { @class = "form-control" })
+                                            @Html.ValidationMessageFor(m => m.Gender, "", new { @class = "text-danger" })
+                                            <span class="help-block">Optional but recommended for complete records</span>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- RIGHT COLUMN -->
+                                    <div class="col-md-6">
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.LastName, new { @class = "control-label" })
+                                            @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", placeholder = "Enter last name", required = "required" })
+                                            @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                                            <span class="help-block">Required field</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.Phone, new { @class = "control-label" })
+                                            @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", placeholder = "0123456789", required = "required", pattern = "[0-9]{10}", maxlength = "10" })
+                                            @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger" })
+                                            <span class="help-block">10-digit phone number (e.g., 0123456789)</span>
+                                        </div>
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(m => m.DateOfBirth, new { @class = "control-label" })
+                                            @Html.TextBoxFor(m => m.DateOfBirth, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", max = DateTime.Now.AddYears(-16).ToString("yyyy-MM-dd") })
+                                            @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "text-danger" })
+                                            <span class="help-block">Required for student verification (must be 16+ years old)</span>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <!-- END 2 COLUMN LAYOUT -->
+
+                                <!-- ALERT (FULL WIDTH - unchanged) -->
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle"></i> <strong>Data Quality:</strong> Complete information ensures smooth course enrollment and certificate delivery.
+                                </div>
+                            }
+
+                            <!-- STEP 2: Address & Contact -->
+                            if (currentStep == 2)
+                            {
+                                <h3>Step 2: Address & Contact Details</h3>
+                                <hr />
+                                <div class="alert alert-warning">
+                                    <i class="fa fa-exclamation-triangle"></i> <strong>Important:</strong> Complete address required for shipping certificates and course materials.
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Address, new { @class = "col-md-3 control-label" })
+                                    <div class="col-md-9">
+                                        @Html.TextBoxFor(m => m.Address, new { @class = "form-control", placeholder = "Street address", required = "required", minlength = "5" })
+                                        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
+                                        <span class="help-block">Full street address (minimum 5 characters)</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.City, new { @class = "col-md-3 control-label" })
+                                    <div class="col-md-9">
+                                        @Html.TextBoxFor(m => m.City, new { @class = "form-control", placeholder = "City", required = "required", minlength = "2" })
+                                        @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })
+                                        <span class="help-block">City name required</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Province, new { @class = "col-md-3 control-label" })
+                                    <div class="col-md-9">
+                                        @Html.DropDownListFor(m => m.Province, (SelectList)ViewBag.Provinces, "Select province...", new { @class = "form-control", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.Province, "", new { @class = "text-danger" })
+                                        <span class="help-block">South African province required</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.PostalCode, new { @class = "col-md-3 control-label" })
+                                    <div class="col-md-9">
+                                        @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control", placeholder = "0000", required = "required", pattern = "[0-9]{4}", maxlength = "4" })
+                                        @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger" })
+                                        <span class="help-block">4-digit postal code (e.g., 2196)</span>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle"></i> <strong>Why we need this:</strong> Physical certificates and course materials will be shipped to this address upon course completion.
+                                </div>
+                            }
+
+                            <!-- STEP 3: ID Documents Placeholder -->
+                            if (currentStep == 3)
+                            {
+                                <h3>Step 3: Identification Documents</h3>
+                                <hr />
+                                <div class="alert alert-warning">
+                                    <i class="fa fa-lock"></i> <strong>Secure Information</strong> - This data will be encrypted
+                                </div>
+                                <p class="text-muted">You can add ID documents after creating the customer profile. Click "Next" to continue.</p>
+                                <p>Once the customer is created, you'll be able to upload:</p>
+                                <ul>
+                                    <li>South African ID Document or Passport</li>
+                                    <li>Professional Registration (HPCSA, SANC, etc.)</li>
+                                    <li>Proof of employment (for corporate learners)</li>
+                                </ul>
+                            }
+
+                            <!-- STEP 4: Payment Placeholder -->
+                            if (currentStep == 4)
+                            {
+                                <h3>Step 4: Payment Information</h3>
+                                <hr />
+                                <div class="alert alert-warning">
+                                    <i class="fa fa-lock"></i> <strong>Secure Information</strong> - Payment data will be encrypted
+                                </div>
+                                <p class="text-muted">Payment methods can be added after creating the customer profile. Click "Next" to continue.</p>
+                                <p>Accepted payment methods:</p>
+                                <ul>
+                                    <li>Credit/Debit Card (Visa, Mastercard)</li>
+                                    <li>Bank Transfer (EFT)</li>
+                                    <li>Corporate Billing (for company-sponsored learners)</li>
+                                </ul>
+                            }
+
+                            <!-- STEP 5: Medical Clearance Placeholder -->
+                            if (currentStep == 5)
+                            {
+                                <h3>Step 5: Medical Clearance</h3>
+                                <hr />
+                                <p class="text-muted">Medical clearance is required only for on-site hospital training. You can complete this step later.</p>
+                                <p>Required for on-site training at healthcare facilities:</p>
+                                <ul>
+                                    <li>TB Test (within 6 months)</li>
+                                    <li>COVID-19 Vaccination Status</li>
+                                    <li>Background Check Clearance</li>
+                                </ul>
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle"></i> This step can be completed later when scheduling on-site training.
+                                </div>
+                            }
+
+                            <!-- STEP 6: Review & Submit -->
+                            if (currentStep == 6)
+                            {
+                                if (!ViewData.ModelState.IsValid)
+                                {
+                                    <div class="alert alert-danger">
+                                        <h4><i class="fa fa-exclamation-triangle"></i> Validation Errors</h4>
+                                        <p>Please review and correct the following errors before submitting:</p>
+                                        <ul>
+                                            @foreach (var key in ViewData.ModelState.Keys)
+                                            {
+                                                var state = ViewData.ModelState[key];
+                                                if (state.Errors.Count > 0)
+                                                {
+                                                    foreach (var error in state.Errors)
+                                                    {
+                                                        <li><strong>@key:</strong> @error.ErrorMessage</li>
+                                                    }
+                                                }
+                                            }
+                                        </ul>
+                                        <p class="text-muted">
+                                            <small>Click the "Edit" buttons below to go back and fix these issues.</small>
+                                        </p>
+                                    </div>
+                                }
+
+                                <h3 class="mt-0">Step 6: Review & Submit</h3>
+                                <hr />
+                                <p class="lead mb-3">Please review the information before submitting:</p>
+
+                                <div class="row">
+                                    <!-- BASIC INFO -->
+                                    <div class="col-md-6">
+                                        <div class="panel panel-info">
+                                            <div class="panel-heading">
+                                                <strong>Basic Information</strong>
+                                                <a href="@Url.Action("Wizard", new { step = 1 })" class="btn btn-xs btn-default pull-right">
+                                                    <i class="fa fa-pencil"></i> Edit
+                                                </a>
+                                            </div>
+                                            <div class="panel-body">
+
+                                                <table class="table table-condensed table-borderless review-table">
+                                                    <tr>
+                                                        <td class="label-col">Customer Code:</td>
+                                                        <td><strong>@Model.CustomerCode</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="label-col">Name:</td>
+                                                        <td>@Model.FirstName @Model.LastName</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="label-col">Email:</td>
+                                                        <td>@Model.Email</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="label-col">Phone:</td>
+                                                        <td>@Model.Phone</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="label-col">Learner Type:</td>
+                                                        <td><span class="label label-info">@Model.CustomerType</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="label-col">Date of Birth:</td>
+                                                        <td>@(Model.DateOfBirth?.ToString("MMMM dd, yyyy") ?? "Not provided")</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="label-col">Gender:</td>
+                                                        <td>@(Model.Gender ?? "Not specified")</td>
+                                                    </tr>
+                                                </table>
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ADDRESS -->
+                                    <div class="col-md-6">
+                                        <div class="panel panel-success">
+                                            <div class="panel-heading">
+                                                <strong>Address</strong>
+                                                <a href="@Url.Action("Wizard", new { step = 2 })" class="btn btn-xs btn-default pull-right">
+                                                    <i class="fa fa-pencil"></i> Edit
+                                                </a>
+                                            </div>
+                                            <div class="panel-body">
+
+                                                <address class="review-address">
+                                                    @Model.Address<br />
+                                                    @Model.City, @Model.Province @Model.PostalCode<br />
+                                                    South Africa
+                                                </address>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fa fa-info-circle"></i>
+                                    <strong>Next Steps:</strong> After submitting, you'll be able to add ID documents, payment methods, and medical clearance from the customer details page.
+                                </div>
+                            }
+
+                            <!-- Navigation Buttons -->
+                            <hr />
+                            <div class="form-group">
+                                <div class="col-md-12 text-center">
+                                    @if (currentStep > 1)
+                                    {
+                                        <button type="submit" name="action" value="Previous" class="btn btn-default btn-lg" formnovalidate="formnovalidate">
+                                            <i class="fa fa-arrow-left"></i> Previous
+                                        </button>
+                                    }
+
+                                    @if (currentStep < 6)
+                                    {
+                                        <button type="submit" name="action" value="Next" class="btn btn-primary btn-lg">
+                                            Next <i class="fa fa-arrow-right"></i>
+                                        </button>
+                                    }
+
+                                    @if (currentStep == 6)
+                                    {
+                                        <button type="submit" name="action" value="Submit" class="btn btn-success btn-lg">
+                                            <i class="fa fa-check"></i> Complete Enrollment
+                                        </button>
+                                    }
+
+                                    <a href="@Url.Action("Index")" class="btn btn-link">Cancel</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    @section Scripts {
+                        @Scripts.Render("~/bundles/jqueryval")
+
+                        <script>
+                                $(document).ready(function () {
+                                // Enable client-side validation
+                                $.validator.unobtrusive.parse('form');
+
+                                // Custom validation for South African phone numbers
+                                $.validator.addMethod("saphone", function (value, element) {
+                                    return this.optional(element) || /^0[0-9]{9}$/.test(value);
+                                }, "Please enter a valid South African phone number (10 digits starting with 0)");
+
+                                // Custom validation for postal code
+                                $.validator.addMethod("sapostal", function (value, element) {
+                                    return this.optional(element) || /^[0-9]{4}$/.test(value);
+                                }, "Please enter a valid 4-digit postal code");
+
+                                // Add validation rules
+                                $("#Phone").rules("add", {
+                                    saphone: true
+                                });
+
+                                $("#PostalCode").rules("add", {
+                                    sapostal: true
+                                });
+
+                                // Prevent form submission if validation fails
+                                    $('form').submit(function (e) {
+                                        var action = $(document.activeElement).val(); // Get which button was clicked
+
+                                        // Skip validation for Previous button
+                                        if (action === 'Previous') {
+                                            return true; // Allow submission
+                                        }
+
+                                        // For Next and Submit buttons, validate
+                                        if (!$(this).valid()) {
+                                            e.preventDefault();
+
+                                            // Scroll to first error
+                                            var firstError = $('.field-validation-error:first');
+                                            if (firstError.length > 0) {
+                                                $('html, body').animate({
+                                                    scrollTop: firstError.closest('.form-group').offset().top - 100
+                                                }, 500);
+                                            }
+
+                                            // Show error alert
+                                            if ($('.validation-summary-errors').length === 0) {
+                                                var errorHtml = '<div class="alert alert-danger alert-dismissible validation-summary-errors">' +
+                                                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                                                    '<strong>Validation Error!</strong> Please correct the errors below before continuing.' +
+                                                    '</div>';
+                                                $('form').prepend(errorHtml);
+                                            }
+
+                                            return false;
+                                        }
+
+                                        return true; // Allow submission if validation passed
+                                    });
+
+                                // Real-time validation feedback
+                                $('input, select').on('blur', function () {
+                                    $(this).valid();
+                                });
+
+                                // Auto-hide validation summary on input
+                                $('input, select').on('input change', function () {
+                                    $('.validation-summary-errors').fadeOut();
+                                });
+                            });</script>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

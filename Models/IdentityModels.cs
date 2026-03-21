@@ -27,6 +27,10 @@ namespace TechSolutions.Models
         }
 
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<IdentificationDocument> IdentificationDocuments { get; set; }
+        public DbSet<PaymentInformation> PaymentInformation { get; set; }
+        public DbSet<MedicalClearance> MedicalClearances { get; set; }
+        public DbSet<EnrollmentHistory> EnrollmentHistories { get; set; }
 
         public static ApplicationDbContext Create()
         {
@@ -39,6 +43,8 @@ namespace TechSolutions.Models
 
             modelBuilder.Entity<Customer>().Property(c => c.DataQualityScore).HasPrecision(5, 2);
             modelBuilder.Entity<Customer>().Property(c => c.RiskScore).HasPrecision(5, 2);
+            modelBuilder.Entity<EnrollmentHistory>().Property(e => e.CourseFee).HasPrecision(10, 2);
+            modelBuilder.Entity<EnrollmentHistory>().Property(e => e.AmountPaid).HasPrecision(10, 2);
         }
     }
 }

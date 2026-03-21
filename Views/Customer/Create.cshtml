@@ -1,0 +1,167 @@
+﻿@model TechSolutions.Models.Customer
+@{
+    ViewBag.Title = "Create Customer";
+}
+
+<div class="app-theme">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8" style="width:100%">
+
+                <!-- Page Header -->
+                <div class="text-center mb-4">
+                    <h2>Create New Customer</h2>
+                    <p class="text-muted">Add a new customer to the system</p>
+                </div>
+
+                <!-- Form Panel -->
+                <div class="panel panel-default">
+                    <div class="panel-body">
+
+                        @using (Html.BeginForm("Create", "Customer", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+
+                            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                            <div class="row" style="padding-right:0px">
+
+                                @Html.HiddenFor(m => m.CustomerCode)
+                                <div class="row" style="padding-right:0px">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap" style="padding-right:0px">
+                                        <div>
+                                            <h3 class="page-header mb-0">Customer Code: @Model.CustomerCode</h3>
+                                        </div>
+
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex">
+                                                <!-- Label aligned top -->
+                                                <label class="me-2 mb-0 align-self-start" for="CustomerType">Customer Type:</label>
+
+                                                <!-- Dropdown + validation stacked vertically -->
+                                                <div class="d-flex flex-column">
+                                                    @Html.DropDownListFor(
+                                                        m => m.CustomerType,
+                                                        (SelectList)ViewBag.CustomerTypes,
+                                                        "No type selected",
+                                                        new { @class = "form-control", id = "CustomerType", style = "width: 250px; text-align: center;" }
+                                                    )
+                                                    @Html.ValidationMessageFor(m => m.CustomerType, "", new { @class = "text-danger mt-1" })
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.FirstName) <span style="float:right">@Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", placeholder = "Enter first name" })
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.LastName) <span style="float:right">@Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", placeholder = "Enter last name" })
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Email) <span style="float:right">@Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "example@email.com" })
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Phone) <span class="help-block" style="">(Format: 0123456789)</span> <span style="float:right"> @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", placeholder = "0123456789" })
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.DateOfBirth)  <span style="float:right">@Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.DateOfBirth, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-6">
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Gender) <span style="float:right"> @Html.ValidationMessageFor(m => m.Gender, "", new { @class = "text-danger" })</span>
+                                        @Html.DropDownListFor(m => m.Gender, (SelectList)ViewBag.Genders, "Select gender", new { @class = "form-control" })
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Address) <span style="float:right"> @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.Address, new { @class = "form-control", placeholder = "Street address" })
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.City)  <span style="float:right"> @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.City, new { @class = "form-control", placeholder = "City" })
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Province) <span style="float:right"> @Html.ValidationMessageFor(m => m.Province, "", new { @class = "text-danger" })</span>
+                                        @Html.DropDownListFor(m => m.Province, (SelectList)ViewBag.Provinces, "Select province", new { @class = "form-control" })
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.PostalCode) <span style="float:right"> @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger" })</span>
+                                        @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control", placeholder = "0000" })
+                                    </div>
+
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group text-center">
+                                        <label>
+                                            @Html.CheckBoxFor(m => m.IsActive) Customer is active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa fa-save"></i> Create Customer
+                                </button>
+                                <a href="@Url.Action("Index")" class="btn btn-default">
+                                    <i class="fa fa-arrow-left"></i> Cancel
+                                </a>
+                            </div>
+
+                            <div class="modal fade app-confirm-modal" id="appConfirmModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+
+                                        <div class="modal-header">
+                                            <h4 class="modal-title">Confirm Action</h4>
+                                        </div>
+
+                                        <div class="modal-body">
+                                            <p id="appConfirmMessage"></p>
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                            <button type="button" class="btn btn-primary" id="appConfirmOk">Confirm</button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+    }
+</div>

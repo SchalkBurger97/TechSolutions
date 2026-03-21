@@ -1,0 +1,394 @@
+﻿@model TechSolutions.Models.Customer
+
+@{
+    ViewBag.Title = "Edit Customer";
+}
+
+<div class="app-theme">
+    <!-- Toast Alerts -->
+    @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+    {
+        <div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible app-toast" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #3c763d; background-color: #dff0d8; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #3c763d; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #3c763d;"><i class="fa fa-check-circle"></i> Success!</strong>
+                        <div style="margin-top: 5px; color: #3c763d;">@TempData["SuccessMessage"]</div>
+                    </div>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible app-toast app-toast-error" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #a94442; background-color: #f2dede; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #a94442; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #a94442;"><i class="fa fa-exclamation-triangle"></i> Error!</strong>
+                        <div style="margin-top: 5px; color: #a94442;">@TempData["ErrorMessage"]</div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="container-fluid">
+        <!-- Back Button -->
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <a href="@Url.Action("Details", new { id = Model.CustomerID })" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Back to Customer Details
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="row">
+            <div class="col-md-8" style="margin: 0 auto; float: none; margin-bottom: 20px;">
+                <div class="panel panel-primary">
+                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
+                        <h3 class="panel-title" style="color: #fff; font-size: 18px; margin: 0;">
+                            <i class="fa fa-pencil"></i> Edit Customer - @Model.FullName
+                        </h3>
+                    </div>
+                    <div class="panel-body" style="padding: 15px; background: var(--color-bg);">
+                        <p style="margin: 0; color: #666;">
+                            <strong>Customer Code:</strong> <span style="color: var(--color-primary); font-weight: 600;">@Model.CustomerCode</span>
+                            <span style="margin: 0 10px;">|</span>
+                            <strong>Current Quality Score:</strong>
+                            @{
+                                var qualityColor = Model.DataQualityScore >= 80 ? "#3c763d" :
+                                                  Model.DataQualityScore >= 60 ? "#8a6d3b" : "#a94442";
+                                var qualityBg = Model.DataQualityScore >= 80 ? "#d4edda" :
+                                               Model.DataQualityScore >= 60 ? "#fcf8e3" : "#f2dede";
+                            }
+                            <span class="label" style="background-color: @qualityBg; color: @qualityColor; border: 1px solid @qualityColor; font-weight: 600;">
+                                @Model.DataQualityScore%
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="row">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <div class="panel panel-default">
+                    <div class="panel-body" style="padding: 30px;">
+                        @using (Html.BeginForm("Edit", "Customer", FormMethod.Post, new { @class = "form-horizontal" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.HiddenFor(m => m.CustomerID)
+                            @Html.HiddenFor(m => m.CustomerCode)
+                            @Html.HiddenFor(m => m.CreatedDate)
+                            @Html.HiddenFor(m => m.CreatedBy)
+
+                            <!-- Validation Summary -->
+                            if (!ViewData.ModelState.IsValid)
+                            {
+                                <div class="alert alert-danger alert-dismissible">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h4><i class="fa fa-exclamation-triangle"></i> Validation Errors</h4>
+                                    <p>Please correct the following errors before saving:</p>
+                                    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                                </div>
+                            }
+
+                            <!-- Section: Personal Information -->
+                            <h4 style="color: var(--color-primary); margin-top: 0; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-user"></i> Personal Information
+                            </h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.FirstName, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", placeholder = "First name", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
+                                        <span class="help-block">Required field</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.LastName, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", placeholder = "Last name", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
+                                        <span class="help-block">Required field</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.DateOfBirth, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.DateOfBirth, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", max = DateTime.Now.AddYears(-16).ToString("yyyy-MM-dd") })
+                                        @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "text-danger" })
+                                        <span class="help-block">Must be 16+ years old</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Gender, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.Gender, (SelectList)ViewBag.Genders, "Select gender...", new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.Gender, "", new { @class = "text-danger" })
+                                        <span class="help-block">Optional</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: Contact Information -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-envelope"></i> Contact Information
+                            </h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Email, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "email@example.com", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                                        <span class="help-block">Valid email address required</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Phone, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", placeholder = "0123456789", required = "required", pattern = "[0-9]{10}", maxlength = "10" })
+                                        @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger" })
+                                        <span class="help-block">10-digit phone number (e.g., 0123456789)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: Address -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-map-marker"></i> Address Information
+                            </h4>
+
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.Address, new { @class = "control-label" })
+                                @Html.TextBoxFor(m => m.Address, new { @class = "form-control", placeholder = "Street address", required = "required", minlength = "5" })
+                                @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
+                                <span class="help-block">Full street address (minimum 5 characters)</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.City, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.City, new { @class = "form-control", placeholder = "City", required = "required", minlength = "2" })
+                                        @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })
+                                        <span class="help-block">City name required</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.Province, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.Province, (SelectList)ViewBag.Provinces, "Select province...", new { @class = "form-control", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.Province, "", new { @class = "text-danger" })
+                                        <span class="help-block">South African province required</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.PostalCode, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control", placeholder = "0000", required = "required", pattern = "[0-9]{4}", maxlength = "4" })
+                                        @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger" })
+                                        <span class="help-block">4-digit postal code (e.g., 2196)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section: Account Settings -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-cog"></i> Account Settings
+                            </h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.CustomerType, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.CustomerType, (SelectList)ViewBag.CustomerTypes, "Select learner type...", new { @class = "form-control", required = "required" })
+                                        @Html.ValidationMessageFor(m => m.CustomerType, "", new { @class = "text-danger" })
+                                        <span class="help-block">Learner type required</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Current Data Quality Score</label>
+                                        <div style="padding-top: 7px;">
+                                            <span class="label" style="background-color: @qualityBg; color: @qualityColor; border: 1px solid @qualityColor; font-weight: 600; font-size: 14px; padding: 6px 12px;">
+                                                @Model.DataQualityScore%
+                                            </span>
+                                            <span class="help-block" style="margin: 5px 0 0 0;">Auto-calculated on save</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label style="font-weight: 600;">
+                                        @Html.CheckBoxFor(m => m.IsActive)
+                                        <span style="margin-left: 5px;">Customer is active</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <hr style="margin: 30px 0; border-color: var(--color-bg);" />
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg" style="min-width: 150px; margin-right: 10px;">
+                                        <i class="fa fa-save"></i> Save Changes
+                                    </button>
+                                    <a href="@Url.Action("Details", new { id = Model.CustomerID })" class="btn btn-default btn-lg" style="min-width: 150px;">
+                                        <i class="fa fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="alert alert-info" style="border-left: 4px solid #31708f;">
+                    <i class="fa fa-info-circle"></i> <strong>Note:</strong> The data quality score will be automatically recalculated when you save changes. Make sure all required fields are complete to maintain a high quality score.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        $(document).ready(function () {
+            // Enable client-side validation
+            $.validator.unobtrusive.parse('form');
+
+            // Custom validation for South African phone numbers
+            $.validator.addMethod("saphone", function (value, element) {
+                return this.optional(element) || /^0[0-9]{9}$/.test(value);
+            }, "Please enter a valid South African phone number (10 digits starting with 0)");
+
+            // Custom validation for postal code
+            $.validator.addMethod("sapostal", function (value, element) {
+                return this.optional(element) || /^[0-9]{4}$/.test(value);
+            }, "Please enter a valid 4-digit postal code");
+
+            // Add validation rules
+            $("#Phone").rules("add", {
+                saphone: true
+            });
+
+            $("#PostalCode").rules("add", {
+                sapostal: true
+            });
+
+            // Real-time validation feedback
+            $('input, select').on('blur', function () {
+                $(this).valid();
+            });
+
+            // Prevent form submission if validation fails
+            $('form').submit(function (e) {
+                if (!$(this).valid()) {
+                    e.preventDefault();
+
+                    // Scroll to first error
+                    var firstError = $('.field-validation-error:first');
+                    if (firstError.length > 0) {
+                        $('html, body').animate({
+                            scrollTop: firstError.closest('.form-group').offset().top - 100
+                        }, 500);
+                    }
+
+                    // Show error alert if not already visible
+                    if ($('.validation-summary-errors').length === 0 && $('.alert-danger').length === 0) {
+                        var errorHtml = '<div class="alert alert-danger alert-dismissible validation-summary-errors" style="margin-bottom: 20px;">' +
+                            '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                            '<h4><i class="fa fa-exclamation-triangle"></i> Validation Error!</h4>' +
+                            '<p>Please correct the errors below before saving.</p>' +
+                            '</div>';
+                        $('form').prepend(errorHtml);
+
+                        // Scroll to top to show alert
+                        $('html, body').animate({ scrollTop: 0 }, 500);
+                    }
+
+                    return false;
+                }
+            });
+
+            // Auto-hide validation summary on input
+            $('input, select').on('input change', function () {
+                $('.validation-summary-errors').fadeOut();
+            });
+
+            // Toast animations
+            $('.app-toast').each(function (index) {
+                var $toast = $(this);
+                $toast.css({
+                    'opacity': '0',
+                    'transform': 'translateX(400px)'
+                });
+
+                setTimeout(function () {
+                    $toast.animate({
+                        'opacity': '1'
+                    }, 400);
+                    $toast.css({
+                        'transform': 'translateX(0)',
+                        'transition': 'transform 0.4s ease-out'
+                    });
+                }, index * 100);
+            });
+        });
+
+        // Auto-hide ONLY success messages
+        setTimeout(function () {
+            $('.app-toast:not(.app-toast-error)').each(function (index) {
+                var $toast = $(this);
+                setTimeout(function () {
+                    $toast.css({
+                        'transform': 'translateX(400px)',
+                        'transition': 'all 0.3s ease-in',
+                        'opacity': '0'
+                    });
+                    setTimeout(function () {
+                        $toast.remove();
+                    }, 300);
+                }, index * 100);
+            });
+        }, 5000);
+
+        // Manual close
+        $('.app-toast-close').on('click', function () {
+            var $toast = $(this).closest('.app-toast');
+            $toast.css({
+                'transform': 'translateX(400px)',
+                'transition': 'all 0.3s ease-in',
+                'opacity': '0'
+            });
+            setTimeout(function () {
+                $toast.remove();
+            }, 300);
+        });
+    </script>
+}
