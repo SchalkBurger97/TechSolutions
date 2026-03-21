@@ -753,3 +753,18 @@
             background: var(--color-bg) !important;
             color: var(--color-primary) !important;
         }
+
+/* Dashboard metric cards */
+.app-theme .metric-card {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 25px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+    .app-theme .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }

@@ -1,65 +1,133 @@
 ﻿@using TechSolutions.Models
 @model LoginViewModel
+
 @{
     ViewBag.Title = "Log in";
+    Layout = null;
 }
 
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
-    <div class="row">
-        <div class="col-md-8">
-            <section id="loginForm">
-                @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
-                {
-                    @Html.AntiForgeryToken()
-                    <h4>Use a local account to log in.</h4>
-                    <hr />
-                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                    <div class="row">
-                        @Html.LabelFor(m => m.Email, new { @class = "col-md-2 col-form-label" })
-                        <div class="col-md-10">
-                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-                    <div class="row">
-                        @Html.LabelFor(m => m.Password, new { @class = "col-md-2 col-form-label" })
-                        <div class="col-md-10">
-                            @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="offset-md-2 col-md-10">
-                            <div class="checkbox">
-                                @Html.CheckBoxFor(m => m.RememberMe)
-                                @Html.LabelFor(m => m.RememberMe)
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="offset-md-2 col-md-10">
-                            <input type="submit" value="Log in" class="btn btn-outline-dark" />
-                        </div>
-                    </div>
-                    <p>
-                        @Html.ActionLink("Register as a new user", "Register")
-                    </p>
-                    @* Enable this once you have account confirmation enabled for password reset functionality
-                        <p>
-                            @Html.ActionLink("Forgot your password?", "ForgotPassword")
-                        </p>*@
-                }
-            </section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - TechSolutions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    </style>
+    @Styles.Render("~/Content/Login.css")
+</head>
+<body>
+    <div class="logo">
+        Tech<span>Solutions</span>
+    </div>
+
+    <div class="container" id="authContainer">
+        <div class="curved-shape"></div>
+        <div class="curved-shape2"></div>
+
+        <!-- LOGIN FORM -->
+        <div class="form-box Login">
+            <h2 class="animation" style="--D:0; --S:21">Login</h2>
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form", autocomplete = "off" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors animation", style = "--D:1; --S:22" })
+
+                <div class="input-box animation" style="--D:1; --S:22">
+                    @Html.TextBoxFor(m => m.Email, new { placeholder = " ", autocomplete = "off" })
+                    <label>Email</label>
+                    <i class="fa fa-envelope"></i>
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="input-box animation" style="--D:2; --S:23">
+                    @Html.PasswordFor(m => m.Password, new { placeholder = " ", autocomplete = "new-password" })
+                    <label>Password</label>
+                    <i class="fa fa-lock"></i>
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="input-box animation" style="--D:3; --S:24">
+                    <button class="btn" type="submit">Login</button>
+                </div>
+
+                <div class="regi-link animation" style="--D:4; --S:25">
+                    <p>Don't have an account? <br> <a class="SignUpLink">Sign Up</a></p>
+                </div>
+            }
         </div>
-        <div class="col-md-4">
-            <section id="socialLoginForm">
-                @Html.Partial("_ExternalLoginsListPartial", new ExternalLoginListViewModel { ReturnUrl = ViewBag.ReturnUrl })
-            </section>
+
+        <!-- LOGIN INFO -->
+        <div class="info-content Login">
+            <h2 class="animation" style="--D:0; --S:20">WELCOME BACK!</h2>
+            <p class="animation" style="--D:1; --S:21">We're happy to have you with us again. Access your healthcare IT training dashboard and continue your learning journey.</p>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div class="form-box Register">
+            <h2 class="animation" style="--li:17; --S:0">Register</h2>
+            @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form", autocomplete = "off" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="input-box animation" style="--li:18; --S:1">
+                    <input type="email" name="Email" required placeholder=" " autocomplete="off" />
+                    <label>Email</label>
+                    <i class="fa fa-envelope"></i>
+                </div>
+
+                <div class="input-box animation" style="--li:19; --S:2">
+                    <input type="password" name="Password" required placeholder=" " autocomplete="new-password" />
+                    <label>Password</label>
+                    <i class="fa fa-lock"></i>
+                </div>
+
+                <div class="input-box animation" style="--li:20; --S:3">
+                    <input type="password" name="ConfirmPassword" required placeholder=" " autocomplete="new-password" />
+                    <label>Confirm Password</label>
+                    <i class="fa fa-lock"></i>
+                </div>
+
+                <div class="input-box animation" style="--li:21; --S:4">
+                    <button class="btn" type="submit">Register</button>
+                </div>
+
+                <div class="regi-link animation" style="--li:22; --S:5">
+                    <p>Already have an account? <br> <a class="SignInLink">Sign In</a></p>
+                </div>
+            }
+        </div>
+
+        <!-- REGISTER INFO -->
+        <div class="info-content Register">
+            <h2 class="animation" style="--li:17; --S:0">WELCOME!</h2>
+            <p class="animation" style="--li:18; --S:1">Join TechSolutions Healthcare IT Training. Create your account to access industry-leading courses and certification programs.</p>
         </div>
     </div>
-</main>
 
-@section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
-}
+    <script>
+        // Get elements
+        const container = document.getElementById('authContainer');
+        const loginLink = document.querySelector('.SignInLink');
+        const registerLink = document.querySelector('.SignUpLink');
+
+        // Switch to Register form
+        if (registerLink) {
+            registerLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                container.classList.add('active');
+            });
+        }
+
+        // Switch to Login form
+        if (loginLink) {
+            loginLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                container.classList.remove('active');
+            });
+        }
+    </script>
+</body>
+</html>

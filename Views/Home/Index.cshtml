@@ -3,95 +3,110 @@
 }
 
 <div class="app-theme">
-    <div class="container-fluid py-4">
+    <div class="container-fluid">
 
         <!-- Page Header -->
-        <div class="row mb-4">
+        <div class="row" style="margin-bottom: 30px;">
             <div class="col-md-12">
-                <h2>Dashboard</h2>
-                <p class="text-muted">Welcome to TechSolutions Customer Management System</p>
+                <div class="panel panel-primary">
+                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
+                        <h3 class="panel-title" style="color: #fff; font-size: 24px; margin: 0;">
+                            <i class="fa fa-dashboard"></i> Dashboard
+                        </h3>
+                    </div>
+                    <div class="panel-body" style="padding: 15px; background: var(--color-bg);">
+                        <p style="margin: 0; color: #666;">
+                            <i class="fa fa-calendar"></i> <strong>@DateTime.Now.ToString("dddd, MMMM dd, yyyy")</strong>
+                            <span style="margin: 0 10px;">|</span>
+                            Welcome to TechSolutions Customer Management System
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Metric Cards -->
-        <div class="row mb-4">
-
+        <div class="row" style="margin-bottom: 30px;">
+            <!-- Total Customers -->
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6 class="card-subtitle mb-2 text-muted">Total Customers</h6>
-                        <h2 class="card-title text-primary">@ViewBag.TotalCustomers</h2>
-                        <p class="card-text small">
-                            <i class="fa fa-arrow-up"></i> Active accounts
-                        </p>
+                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid var(--color-primary);" class="metric-card">
+                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">Total Customers</div>
+                    <div style="font-size: 42px; font-weight: 700; color: var(--color-primary); margin-bottom: 10px;">@ViewBag.TotalCustomers</div>
+                    <div style="color: #5cb85c; font-size: 14px;">
+                        <i class="fa fa-arrow-up"></i> Active accounts
                     </div>
                 </div>
             </div>
 
+            <!-- New This Month -->
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6 class="card-subtitle mb-2 text-muted">New This Month</h6>
-                        <h2 class="card-title text-primary">@ViewBag.NewThisMonth</h2>
-                        <p class="card-text small">
-                            <i class="fa fa-plus"></i> Recently added
-                        </p>
+                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid var(--color-secondary);" class="metric-card">
+                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">New This Month</div>
+                    <div style="font-size: 42px; font-weight: 700; color: var(--color-secondary); margin-bottom: 10px;">@ViewBag.NewThisMonth</div>
+                    <div style="color: var(--color-secondary); font-size: 14px;">
+                        <i class="fa fa-plus"></i> Recently added
                     </div>
                 </div>
             </div>
 
+            <!-- Average Quality -->
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6 class="card-subtitle mb-2 text-muted">Average Quality</h6>
-                        <h2 class="card-title text-primary">@ViewBag.AverageQuality%</h2>
-                        <p class="card-text small">
-                            <i class="fa fa-ok"></i> Data integrity
-                        </p>
+                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid #5cb85c;" class="metric-card">
+                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">Average Quality</div>
+                    <div style="font-size: 42px; font-weight: 700; color: #5cb85c; margin-bottom: 10px;">@ViewBag.AverageQuality<span style="font-size: 24px;">%</span></div>
+                    <div style="color: #5cb85c; font-size: 14px;">
+                        <i class="fa fa-check-circle"></i> Data integrity
                     </div>
                 </div>
             </div>
 
+            <!-- Quality Issues -->
             <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <h6 class="card-subtitle mb-2 text-muted">Quality Issues</h6>
-                        <h2 class="card-title text-primary">@ViewBag.IssuesCount</h2>
-                        <p class="card-text small">
-                            <i class="fa fa-exclamation-sign"></i> Needs attention
-                        </p>
+                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid #f0ad4e;" class="metric-card">
+                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">Quality Issues</div>
+                    <div style="font-size: 42px; font-weight: 700; color: #f0ad4e; margin-bottom: 10px;">@ViewBag.IssuesCount</div>
+                    <div style="color: #f0ad4e; font-size: 14px;">
+                        <i class="fa fa-exclamation-triangle"></i> Needs attention
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Quick Actions -->
-        <div class="row mb-4">
+        <!-- Quick Actions & System Status -->
+        <div class="row" style="margin-bottom: 30px;">
+            <!-- Quick Actions -->
             <div class="col-md-6">
-                <div class="card" style="height:100%">
-                    <div class="card-header">
-                        <h5 class="mb-0">Quick Actions</h5>
+                <div class="panel panel-default" style="height: 100%;">
+                    <div class="panel-heading" style="background: var(--color-bg); border: none;">
+                        <h4 class="panel-title" style="color: var(--color-primary); margin: 0;">
+                            <i class="fa fa-bolt"></i> Quick Actions
+                        </h4>
                     </div>
-                    <div class="card-body">
-                        <div class="list-group">
-
-                            <a href="@Url.Action("Create", "Customer")" class="list-group-item list-group-item-action">
-                                <i class="fa fa-plus"></i> Add New Customer
+                    <div class="panel-body" style="padding: 0;">
+                        <div class="list-group" style="margin-bottom: 0;">
+                            <a href="@Url.Action("Create", "Customer")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; border-top: none; padding: 15px 20px; transition: var(--transition);">
+                                <i class="fa fa-plus-circle" style="color: var(--color-primary); margin-right: 10px; font-size: 18px;"></i>
+                                <strong style="color: #333;">Add New Customer</strong>
+                                <span style="float: right; color: #999;"><i class="fa fa-chevron-right"></i></span>
                             </a>
 
-                            <a href="@Url.Action("Index", "Customer")" class="list-group-item list-group-item-action">
-                                <i class="fa fa-list"></i> View All Customers
+                            <a href="@Url.Action("Index", "Customer")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; padding: 15px 20px; transition: var(--transition);">
+                                <i class="fa fa-list" style="color: var(--color-secondary); margin-right: 10px; font-size: 18px;"></i>
+                                <strong style="color: #333;">View All Customers</strong>
+                                <span style="float: right; color: #999;"><i class="fa fa-chevron-right"></i></span>
                             </a>
 
-                            <a href="@Url.Action("Index", "DataQuality")" class="list-group-item list-group-item-action">
-                                <i class="fa fa-ok-circle"></i> Check Data Quality
+                            <a href="@Url.Action("Index", "DataQuality")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; padding: 15px 20px; transition: var(--transition);">
+                                <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px; font-size: 18px;"></i>
+                                <strong style="color: #333;">Check Data Quality</strong>
+                                <span class="label label-default" style="float: right; background: #999;">Coming Soon</span>
                             </a>
 
-                            <a href="@Url.Action("Export", "Reports")" class="list-group-item list-group-item-action">
-                                <i class="fa fa-download-alt"></i> Export Reports
+                            <a href="@Url.Action("Export", "Reports")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; border-bottom: none; padding: 15px 20px; transition: var(--transition);">
+                                <i class="fa fa-download" style="color: #f0ad4e; margin-right: 10px; font-size: 18px;"></i>
+                                <strong style="color: #333;">Export Reports</strong>
+                                <span class="label label-default" style="float: right; background: #999;">Coming Soon</span>
                             </a>
-
                         </div>
                     </div>
                 </div>
@@ -99,43 +114,88 @@
 
             <!-- System Status -->
             <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">System Status</h5>
+                <div class="panel panel-default" style="height: 100%;">
+                    <div class="panel-heading" style="background: var(--color-bg); border: none;">
+                        <h4 class="panel-title" style="color: var(--color-primary); margin: 0;">
+                            <i class="fa fa-heartbeat"></i> System Status
+                        </h4>
                     </div>
-                    <div class="card-body">
-
-                        <div class="alert alert-primary">
-                            <strong><i class="fa fa-ok"></i> All Systems Operational</strong>
-                            <p class="mb-0 small">SQL Server connected and running smoothly</p>
+                    <div class="panel-body" style="padding: 25px;">
+                        <div class="alert alert-success" style="background: #d4edda; border: 1px solid #3c763d; border-radius: var(--border-radius); margin-bottom: 20px;">
+                            <h5 style="margin: 0 0 5px 0; color: #3c763d;">
+                                <i class="fa fa-check-circle"></i> All Systems Operational
+                            </h5>
+                            <p class="small" style="margin: 0; color: #3c763d;">SQL Server connected and running smoothly</p>
                         </div>
 
-                        <ul class="list-unstyled">
-                            <li><i class="fa fa-ok text-primary"></i> Database: TechSolutionsDB</li>
-                            <li><i class="fa fa-ok text-primary"></i> Server: SQL Server Express</li>
-                            <li><i class="fa fa-ok text-primary"></i> Authentication: Active</li>
-                        </ul>
-
+                        <div style="background: var(--color-bg); padding: 15px; border-radius: var(--border-radius);">
+                            <ul class="list-unstyled" style="margin: 0;">
+                                <li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
+                                    <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px;"></i>
+                                    <strong style="color: #333;">Database:</strong> <span style="color: #666;">TechSolutionsDB</span>
+                                </li>
+                                <li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
+                                    <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px;"></i>
+                                    <strong style="color: #333;">Server:</strong> <span style="color: #666;">SQL Server Express</span>
+                                </li>
+                                <li style="padding: 8px 0;">
+                                    <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px;"></i>
+                                    <strong style="color: #333;">Authentication:</strong> <span style="color: #666;">Active</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Getting Started -->
+        <!-- Getting Started Guide -->
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Getting Started</h5>
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
+                        <h4 class="panel-title" style="color: #fff; margin: 0;">
+                            <i class="fa fa-rocket"></i> Getting Started
+                        </h4>
                     </div>
-                    <div class="card-body">
-                        <p>Welcome to TechSolutions Customer Management System. Here's how to get started:</p>
-                        <ol>
-                            <li><strong>Add Your First Customer:</strong> Click "Add New Customer"</li>
-                            <li><strong>View Customer List:</strong> Navigate to "Customers"</li>
-                            <li><strong>Monitor Data Quality:</strong> Check the "Data Quality" page</li>
-                            <li><strong>Generate Reports:</strong> Use the Reports section</li>
-                        </ol>
+                    <div class="panel-body" style="padding: 25px;">
+                        <p style="font-size: 16px; color: #666; margin-bottom: 20px;">
+                            Welcome to TechSolutions Customer Management System. Here's how to get started:
+                        </p>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">1</div>
+                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">Add Your First Customer</h5>
+                                    <p style="color: #666; font-size: 14px; margin: 0;">Click "Add New Customer" to create your first customer record</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">2</div>
+                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">View Customer List</h5>
+                                    <p style="color: #666; font-size: 14px; margin: 0;">Navigate to "Customers" to see all your customer records</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">3</div>
+                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">Monitor Data Quality</h5>
+                                    <p style="color: #666; font-size: 14px; margin: 0;">Check the "Data Quality" page to ensure data integrity</p>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
+                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">4</div>
+                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">Generate Reports</h5>
+                                    <p style="color: #666; font-size: 14px; margin: 0;">Use the Reports section to export and analyze data</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -143,3 +203,17 @@
 
     </div>
 </div>
+
+<style>
+    /* Metric card hover effect */
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    }
+
+    /* List group item hover */
+    .quick-action-item:hover {
+        background: var(--color-bg) !important;
+        border-left: 3px solid var(--color-primary) !important;
+    }
+</style>
