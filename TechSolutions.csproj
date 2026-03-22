@@ -169,12 +169,15 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\Startup.Auth.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\ClearanceController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
+    <Compile Include="Controllers\DocumentsController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\EncryptionHelper.cs" />
     <Compile Include="Migrations\202603201432566_InitialCreate.cs" />
     <Compile Include="Migrations\202603201432566_InitialCreate.Designer.cs">
       <DependentUpon>202603201432566_InitialCreate.cs</DependentUpon>
@@ -182,6 +185,18 @@
     <Compile Include="Migrations\202603210140210_AddSensitiveDataTables.cs" />
     <Compile Include="Migrations\202603210140210_AddSensitiveDataTables.Designer.cs">
       <DependentUpon>202603210140210_AddSensitiveDataTables.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202603211855426_AddMedicalClearanceNewFields.cs" />
+    <Compile Include="Migrations\202603211855426_AddMedicalClearanceNewFields.Designer.cs">
+      <DependentUpon>202603211855426_AddMedicalClearanceNewFields.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202603211921441_AddIdentificationDocumentFields.cs" />
+    <Compile Include="Migrations\202603211921441_AddIdentificationDocumentFields.Designer.cs">
+      <DependentUpon>202603211921441_AddIdentificationDocumentFields.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202603220926334_AddDocumentFileUploadFields.cs" />
+    <Compile Include="Migrations\202603220926334_AddDocumentFileUploadFields.Designer.cs">
+      <DependentUpon>202603220926334_AddDocumentFileUploadFields.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
@@ -274,6 +289,10 @@
     <Content Include="Views\Customer\Edit.cshtml" />
     <Content Include="Views\Customer\Details.cshtml" />
     <Content Include="Views\Customer\Wizard.cshtml" />
+    <Content Include="Views\Clearance\Manage.cshtml" />
+    <Content Include="Views\Documents\Index.cshtml" />
+    <Content Include="Views\Documents\Create.cshtml" />
+    <Content Include="Views\Documents\Edit.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -311,6 +330,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202603210140210_AddSensitiveDataTables.resx">
       <DependentUpon>202603210140210_AddSensitiveDataTables.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202603211855426_AddMedicalClearanceNewFields.resx">
+      <DependentUpon>202603211855426_AddMedicalClearanceNewFields.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202603211921441_AddIdentificationDocumentFields.resx">
+      <DependentUpon>202603211921441_AddIdentificationDocumentFields.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202603220926334_AddDocumentFileUploadFields.resx">
+      <DependentUpon>202603220926334_AddDocumentFileUploadFields.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

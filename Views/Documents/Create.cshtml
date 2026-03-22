@@ -1,0 +1,417 @@
+﻿@model TechSolutions.Models.IdentificationDocument
+
+@{
+    ViewBag.Title = "Add ID Document";
+    var customer = ViewBag.Customer as TechSolutions.Models.Customer;
+}
+
+<div class="app-theme">
+    <!-- Toast Alerts -->
+    @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+    {
+        <div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible app-toast" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #3c763d; background-color: #dff0d8; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #3c763d; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #3c763d;"><i class="fa fa-check-circle"></i> Success!</strong>
+                        <div style="margin-top: 5px; color: #3c763d;">@TempData["SuccessMessage"]</div>
+                    </div>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible app-toast app-toast-error" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #a94442; background-color: #f2dede; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #a94442; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #a94442;"><i class="fa fa-exclamation-triangle"></i> Error!</strong>
+                        <div style="margin-top: 5px; color: #a94442;">@TempData["ErrorMessage"]</div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="container-fluid">
+        <!-- Back Button -->
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <a href="@Url.Action("Index", new { customerId = customer.CustomerID })" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Back to Documents List
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="row" style="margin-bottom: 20px;">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <div class="panel panel-primary">
+                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
+                        <h3 class="panel-title" style="color: #fff; font-size: 18px; margin: 0;">
+                            <i class="fa fa-plus-circle"></i> Add ID Document - @customer.FullName
+                        </h3>
+                    </div>
+                    <div class="panel-body" style="padding: 15px; background: var(--color-bg);">
+                        <p style="margin: 0; color: #666;">
+                            <strong>Customer Code:</strong> <span style="color: var(--color-primary); font-weight: 600;">@customer.CustomerCode</span>
+                            <span style="margin: 0 10px;">|</span>
+                            <i class="fa fa-lock" style="color: #d9534f;"></i> <strong style="color: #d9534f;">Sensitive Data - Will be Encrypted</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Form -->
+        <div class="row">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <div class="panel panel-default">
+                    <div class="panel-body" style="padding: 30px;">
+                        @using (Html.BeginForm("Create", "Documents", FormMethod.Post, new { @class = "form-horizontal", enctype = "multipart/form-data", id = "documentForm" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.HiddenFor(m => m.CustomerID)
+                            @Html.HiddenFor(m => m.DocumentNumber, new { id = "hiddenDocumentNumber" })
+
+                            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                            <!-- Document Type -->
+                            <h4 style="color: var(--color-primary); margin-top: 0; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-file-text"></i> Document Type
+                            </h4>
+
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.DocumentType, new { @class = "control-label" })
+                                @Html.DropDownListFor(m => m.DocumentType, (SelectList)ViewBag.DocumentTypes, "Select document type...", new { @class = "form-control", id = "documentTypeSelect" })
+                                @Html.ValidationMessageFor(m => m.DocumentType, "", new { @class = "text-danger" })
+                            </div>
+
+                            <!-- Document Number Section -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-hashtag"></i> Document Number
+                            </h4>
+
+                            <!-- ID Number Section -->
+                            <div id="idNumberSection" style="display: none;">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.IDNumber, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.IDNumber, new { @class = "form-control doc-number-field", placeholder = "South African ID Number (13 digits)", maxlength = "13", pattern = "[0-9]{13}", id = "idNumberInput" })
+                                    @Html.ValidationMessageFor(m => m.IDNumber, "", new { @class = "text-danger" })
+                                    <span class="help-block">
+                                        <i class="fa fa-lock text-danger"></i> Will be encrypted | Format: 13 digits (YYMMDDGSSSCAZ)
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Passport Number Section -->
+                            <div id="passportSection" style="display: none;">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.PassportNumber, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.PassportNumber, new { @class = "form-control doc-number-field", placeholder = "Passport Number", id = "passportInput" })
+                                    @Html.ValidationMessageFor(m => m.PassportNumber, "", new { @class = "text-danger" })
+                                    <span class="help-block">
+                                        <i class="fa fa-lock text-danger"></i> Will be encrypted
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Professional Registration Section -->
+                            <div id="professionalSection" style="display: none;">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.ProfessionalRegNumber, new { @class = "control-label" })
+                                    @Html.TextBoxFor(m => m.ProfessionalRegNumber, new { @class = "form-control doc-number-field", placeholder = "e.g., HPCSA MP1234567, SANC R123456", id = "professionalInput" })
+                                    @Html.ValidationMessageFor(m => m.ProfessionalRegNumber, "", new { @class = "text-danger" })
+                                    <span class="help-block">
+                                        <i class="fa fa-lock text-danger"></i> Will be encrypted | For healthcare professionals
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div id="documentNumberWarning" class="alert alert-warning" style="display: none;">
+                                <i class="fa fa-exclamation-triangle"></i> <strong>Please select a document type first</strong> to enter the document number.
+                            </div>
+
+                            <!-- File Upload -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-upload"></i> Upload Document Scan
+                            </h4>
+
+                            <div class="form-group">
+                                <label class="control-label">Document File (PDF, JPG, PNG)</label>
+                                <input type="file" name="documentFile" id="documentFile" class="form-control" accept=".pdf,.jpg,.jpeg,.png" />
+                                <span class="help-block">
+                                    <i class="fa fa-info-circle"></i> Upload a clear scan or photo of the document (Max 5MB)
+                                </span>
+                                <div id="filePreview" style="margin-top: 10px; display: none;">
+                                    <div style="background: var(--color-bg); padding: 10px; border-radius: var(--border-radius);">
+                                        <strong>Selected:</strong> <span id="fileName"></span>
+                                        <span style="color: #666; margin-left: 10px;">(<span id="fileSize"></span>)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Issuing Information -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-building"></i> Issuing Information
+                            </h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.IssuingCountry, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.IssuingCountry, new { @class = "form-control", placeholder = "e.g., South Africa" })
+                                        @Html.ValidationMessageFor(m => m.IssuingCountry, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.IssuingAuthority, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.IssuingAuthority, new { @class = "form-control", placeholder = "e.g., Department of Home Affairs, HPCSA" })
+                                        @Html.ValidationMessageFor(m => m.IssuingAuthority, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Validity Dates -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-calendar"></i> Validity Dates
+                            </h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.IssueDate, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.IssueDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", max = DateTime.Now.ToString("yyyy-MM-dd") })
+                                        @Html.ValidationMessageFor(m => m.IssueDate, "", new { @class = "text-danger" })
+                                        <span class="help-block">Issue date cannot be in the future</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.ExpiryDate, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.ExpiryDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                        @Html.ValidationMessageFor(m => m.ExpiryDate, "", new { @class = "text-danger" })
+                                        <span class="help-block">Leave blank if document doesn't expire</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Verification -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-check-square"></i> Verification
+                            </h4>
+
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label style="font-weight: 600;">
+                                        @Html.CheckBoxFor(m => m.IsVerified)
+                                        <span style="margin-left: 5px;">Document has been verified</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.VerificationNotes, new { @class = "control-label" })
+                                @Html.TextAreaFor(m => m.VerificationNotes, new { @class = "form-control", rows = "3", placeholder = "Verification notes or comments...", maxlength = "500" })
+                                @Html.ValidationMessageFor(m => m.VerificationNotes, "", new { @class = "text-danger" })
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <hr style="margin: 30px 0; border-color: var(--color-bg);" />
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg" style="min-width: 150px; margin-right: 10px;">
+                                        <i class="fa fa-save"></i> Save Document
+                                    </button>
+                                    <a href="@Url.Action("Index", new { customerId = customer.CustomerID })" class="btn btn-default btn-lg" style="min-width: 150px;">
+                                        <i class="fa fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="alert alert-warning" style="border-left: 4px solid #f0ad4e;">
+                    <i class="fa fa-shield"></i> <strong>Security Notice:</strong> Document numbers are encrypted before being stored. Uploaded files are stored securely and only accessible to authorized personnel.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        $(document).ready(function () {
+            // Show/hide document number fields based on type
+            $('#documentTypeSelect').on('change', function () {
+                var selectedType = $(this).val();
+
+                // Hide all sections and clear values
+                $('#idNumberSection, #passportSection, #professionalSection, #documentNumberWarning').hide();
+                $('.doc-number-field').val('').removeAttr('required');
+                $('#hiddenDocumentNumber').val('');
+
+                // Show relevant section and make it required
+                if (selectedType === 'National ID Card' || selectedType === 'State ID Card') {
+                    $('#idNumberSection').show();
+                    $('#idNumberInput').attr('required', 'required');
+                }
+                else if (selectedType === "Driver's License") {
+                    $('#idNumberSection').show();
+                    $('#idNumberInput').attr('required', 'required');
+                }
+                else if (selectedType === 'Passport') {
+                    $('#passportSection').show();
+                    $('#passportInput').attr('required', 'required');
+                }
+                else if (selectedType === 'Birth Certificate' || selectedType === 'Social Security Card' || selectedType === 'Other') {
+                    $('#professionalSection').show();
+                    $('#professionalInput').attr('required', 'required');
+
+                    // Update label for specific types
+                    if (selectedType === 'Birth Certificate') {
+                        $('label[for="ProfessionalRegNumber"]').text('Birth Certificate Number');
+                        $('#professionalInput').attr('placeholder', 'Birth Certificate Number');
+                    } else if (selectedType === 'Social Security Card') {
+                        $('label[for="ProfessionalRegNumber"]').text('Social Security Number');
+                        $('#professionalInput').attr('placeholder', 'Social Security Number');
+                    } else {
+                        $('label[for="ProfessionalRegNumber"]').text('Professional Registration Number');
+                        $('#professionalInput').attr('placeholder', 'e.g., HPCSA MP1234567, SANC R123456');
+                    }
+                }
+                else if (selectedType === '') {
+                    $('#documentNumberWarning').show();
+                }
+            });
+
+            // Auto-populate DocumentNumber from specific fields
+            $('.doc-number-field').on('input', function () {
+                $('#hiddenDocumentNumber').val($(this).val());
+            });
+
+            // File upload preview
+            $('#documentFile').on('change', function () {
+                var file = this.files[0];
+                if (file) {
+                    // Validate file size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File size must be less than 5MB. Please select a smaller file.');
+                        $(this).val('');
+                        $('#filePreview').hide();
+                        return;
+                    }
+
+                    $('#fileName').text(file.name);
+                    $('#fileSize').text((file.size / 1024).toFixed(2) + ' KB');
+                    $('#filePreview').show();
+                } else {
+                    $('#filePreview').hide();
+                }
+            });
+
+            // Form validation before submit
+            $('#documentForm').on('submit', function (e) {
+                var selectedType = $('#documentTypeSelect').val();
+
+                // Check document type is selected
+                if (!selectedType) {
+                    e.preventDefault();
+                    alert('Please select a document type.');
+                    $('#documentTypeSelect').focus();
+                    return false;
+                }
+
+                // Check that at least one document number field is filled
+                var hasDocNumber = false;
+                if ($('#idNumberInput').is(':visible') && $('#idNumberInput').val()) {
+                    hasDocNumber = true;
+
+                    // Validate SA ID number format (13 digits)
+                    var idNumber = $('#idNumberInput').val();
+                    if (!/^[0-9]{13}$/.test(idNumber)) {
+                        e.preventDefault();
+                        alert('ID Number must be exactly 13 digits.');
+                        $('#idNumberInput').focus();
+                        return false;
+                    }
+                }
+                if ($('#passportInput').is(':visible') && $('#passportInput').val()) {
+                    hasDocNumber = true;
+                }
+                if ($('#professionalInput').is(':visible') && $('#professionalInput').val()) {
+                    hasDocNumber = true;
+                }
+
+                if (!hasDocNumber) {
+                    e.preventDefault();
+                    alert('Please enter the document number.');
+                    $('.doc-number-field:visible').focus();
+                    return false;
+                }
+
+                // Check issuing country
+                if (!$('#IssuingCountry').val()) {
+                    e.preventDefault();
+                    alert('Please enter the issuing country.');
+                    $('#IssuingCountry').focus();
+                    return false;
+                }
+
+                // Validate dates if provided
+                var issueDate = $('#IssueDate').val();
+                var expiryDate = $('#ExpiryDate').val();
+
+                if (issueDate && expiryDate) {
+                    if (new Date(expiryDate) <= new Date(issueDate)) {
+                        e.preventDefault();
+                        alert('Expiry date must be after issue date.');
+                        $('#ExpiryDate').focus();
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // Toast animations
+            $('.app-toast').each(function (index) {
+                var $toast = $(this);
+                $toast.css({ 'opacity': '0', 'transform': 'translateX(400px)' });
+                setTimeout(function () {
+                    $toast.animate({ 'opacity': '1' }, 400);
+                    $toast.css({ 'transform': 'translateX(0)', 'transition': 'transform 0.4s ease-out' });
+                }, index * 100);
+            });
+
+            setTimeout(function () {
+                $('.app-toast:not(.app-toast-error)').each(function (index) {
+                    var $toast = $(this);
+                    setTimeout(function () {
+                        $toast.css({ 'transform': 'translateX(400px)', 'transition': 'all 0.3s ease-in', 'opacity': '0' });
+                        setTimeout(function () { $toast.remove(); }, 300);
+                    }, index * 100);
+                });
+            }, 5000);
+
+            $('.app-toast-close').on('click', function () {
+                var $toast = $(this).closest('.app-toast');
+                $toast.css({ 'transform': 'translateX(400px)', 'transition': 'all 0.3s ease-in', 'opacity': '0' });
+                setTimeout(function () { $toast.remove(); }, 300);
+            });
+        });
+    </script>
+}

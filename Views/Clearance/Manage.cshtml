@@ -1,0 +1,329 @@
+﻿@model TechSolutions.Models.MedicalClearance
+
+@{
+    ViewBag.Title = "Medical Clearance";
+    var customer = ViewBag.Customer as TechSolutions.Models.Customer;
+}
+
+<div class="app-theme">
+    <!-- Toast Alerts -->
+    @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+    {
+        <div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible app-toast" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #3c763d; background-color: #dff0d8; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #3c763d; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #3c763d;"><i class="fa fa-check-circle"></i> Success!</strong>
+                        <div style="margin-top: 5px; color: #3c763d;">@TempData["SuccessMessage"]</div>
+                    </div>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible app-toast app-toast-error" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #a94442; background-color: #f2dede; border-radius: var(--border-radius);">
+                    <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #a94442; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div style="padding-right: 20px;">
+                        <strong style="color: #a94442;"><i class="fa fa-exclamation-triangle"></i> Error!</strong>
+                        <div style="margin-top: 5px; color: #a94442;">@TempData["ErrorMessage"]</div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="container-fluid">
+        <!-- Back Button -->
+        <div class="row" style="margin-bottom: 15px;">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <a href="@Url.Action("Details", "Customer", new { id = customer.CustomerID })" class="btn btn-default">
+                    <i class="fa fa-arrow-left"></i> Back to Customer Details
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="row" style="margin-bottom: 20px;">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <div class="panel panel-primary">
+                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
+                        <h3 class="panel-title" style="color: #fff; font-size: 18px; margin: 0;">
+                            <i class="fa fa-medkit"></i> Medical Clearance - @customer.FullName
+                        </h3>
+                    </div>
+                    <div class="panel-body" style="padding: 15px; background: var(--color-bg);">
+                        <p style="margin: 0; color: #666;">
+                            <strong>Customer Code:</strong> <span style="color: var(--color-primary); font-weight: 600;">@customer.CustomerCode</span>
+                            <span style="margin: 0 10px;">|</span>
+                            <strong>Required for on-site training programs</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Clearance Form -->
+        <div class="row">
+            <div class="col-md-8" style="margin: 0 auto; float: none;">
+                <div class="panel panel-default">
+                    <div class="panel-body" style="padding: 30px;">
+                        @using (Html.BeginForm("Manage", "Clearance", FormMethod.Post, new { @class = "form-horizontal" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.HiddenFor(m => m.ClearanceID)
+                            @Html.HiddenFor(m => m.CustomerID)
+                            @Html.HiddenFor(m => m.CreatedDate)
+
+                            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                            <!-- TB Test Section -->
+                            <h4 style="color: var(--color-primary); margin-top: 0; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-stethoscope"></i> TB Test (Tuberculosis Screening)
+                            </h4>
+
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label style="font-weight: 600;">
+                                        @Html.CheckBoxFor(m => m.HasTBTest)
+                                        <span style="margin-left: 5px;">TB Test Completed</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.TBTestDate, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.TBTestDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                        @Html.ValidationMessageFor(m => m.TBTestDate, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.TBTestExpiryDate, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.TBTestExpiryDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                        @Html.ValidationMessageFor(m => m.TBTestExpiryDate, "", new { @class = "text-danger" })
+                                        <span class="help-block">TB tests valid for 1 year</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.TBTestResult, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.TBTestResult,
+                                            new SelectList(new[] { "Negative", "Positive", "Pending" }),
+                                            "Select result...",
+                                            new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.TBTestResult, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- COVID Vaccination Section -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-shield"></i> COVID-19 Vaccination
+                            </h4>
+
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label style="font-weight: 600;">
+                                        @Html.CheckBoxFor(m => m.HasCOVIDVaccination)
+                                        <span style="margin-left: 5px;">COVID-19 Vaccination Completed</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.LastVaccinationDate, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.LastVaccinationDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                        @Html.ValidationMessageFor(m => m.LastVaccinationDate, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.VaccineBrand, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.VaccineBrand, new { @class = "form-control", placeholder = "e.g., Pfizer, Moderna, J&J" })
+                                        @Html.ValidationMessageFor(m => m.VaccineBrand, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.CovidVaccinationStatus, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.CovidVaccinationStatus,
+                                            new SelectList(new[] { "Fully Vaccinated", "Partially Vaccinated", "Not Vaccinated", "Boosted" }),
+                                            "Select status...",
+                                            new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.CovidVaccinationStatus, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Background Check Section -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-check-square"></i> Background Check
+                            </h4>
+
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label style="font-weight: 600;">
+                                        @Html.CheckBoxFor(m => m.HasBackgroundCheck)
+                                        <span style="margin-left: 5px;">Background Check Completed</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.BackgroundCheckDate, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.BackgroundCheckDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                                        @Html.ValidationMessageFor(m => m.BackgroundCheckDate, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.BackgroundCheckStatus, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.BackgroundCheckStatus,
+                                            new SelectList(new[] { "Pending", "Clear", "Issues Found", "In Progress" }),
+                                            "Select status...",
+                                            new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.BackgroundCheckStatus, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Healthcare Facility & Overall Clearance -->
+                            <h4 style="color: var(--color-primary); margin-top: 30px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--color-bg);">
+                                <i class="fa fa-hospital-o"></i> Facility & Overall Clearance
+                            </h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.HealthcareFacility, new { @class = "control-label" })
+                                        @Html.TextBoxFor(m => m.HealthcareFacility, new { @class = "form-control", placeholder = "Where on-site training will occur" })
+                                        @Html.ValidationMessageFor(m => m.HealthcareFacility, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        @Html.LabelFor(m => m.ClearanceStatus, new { @class = "control-label" })
+                                        @Html.DropDownListFor(m => m.ClearanceStatus,
+                                            new SelectList(new[] { "Pending", "Approved", "Rejected", "In Review" }),
+                                            "Select status...",
+                                            new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(m => m.ClearanceStatus, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label style="font-weight: 600;">
+                                        @Html.CheckBoxFor(m => m.ClearedForOnsiteTraining)
+                                        <span style="margin-left: 5px;">Customer is cleared for on-site training</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                @Html.LabelFor(m => m.ClearanceNotes, new { @class = "control-label" })
+                                @Html.TextAreaFor(m => m.ClearanceNotes, new { @class = "form-control", rows = "4", placeholder = "Additional notes or special requirements..." })
+                                @Html.ValidationMessageFor(m => m.ClearanceNotes, "", new { @class = "text-danger" })
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <hr style="margin: 30px 0; border-color: var(--color-bg);" />
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg" style="min-width: 150px; margin-right: 10px;">
+                                        <i class="fa fa-save"></i> Save Clearance
+                                    </button>
+                                    <a href="@Url.Action("Details", "Customer", new { id = customer.CustomerID })" class="btn btn-default btn-lg" style="min-width: 150px;">
+                                        <i class="fa fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="alert alert-info" style="border-left: 4px solid #31708f;">
+                    <i class="fa fa-info-circle"></i> <strong>Note:</strong> Medical clearance is required for students attending on-site training programs at healthcare facilities. All clearances must be current and valid.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        // Toast animations
+        $(document).ready(function () {
+            $('.app-toast').each(function (index) {
+                var $toast = $(this);
+                $toast.css({
+                    'opacity': '0',
+                    'transform': 'translateX(400px)'
+                });
+
+                setTimeout(function () {
+                    $toast.animate({
+                        'opacity': '1'
+                    }, 400);
+                    $toast.css({
+                        'transform': 'translateX(0)',
+                        'transition': 'transform 0.4s ease-out'
+                    });
+                }, index * 100);
+            });
+        });
+
+        // Auto-hide ONLY success messages
+        setTimeout(function () {
+            $('.app-toast:not(.app-toast-error)').each(function (index) {
+                var $toast = $(this);
+                setTimeout(function () {
+                    $toast.css({
+                        'transform': 'translateX(400px)',
+                        'transition': 'all 0.3s ease-in',
+                        'opacity': '0'
+                    });
+                    setTimeout(function () {
+                        $toast.remove();
+                    }, 300);
+                }, index * 100);
+            });
+        }, 5000);
+
+        // Manual close
+        $('.app-toast-close').on('click', function () {
+            var $toast = $(this).closest('.app-toast');
+            $toast.css({
+                'transform': 'translateX(400px)',
+                'transition': 'all 0.3s ease-in',
+                'opacity': '0'
+            });
+            setTimeout(function () {
+                $toast.remove();
+            }, 300);
+        });
+    </script>
+}

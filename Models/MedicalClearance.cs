@@ -26,11 +26,19 @@ namespace TechSolutions.Models
         [Display(Name = "TB Test Result")]
         public string TBTestResult { get; set; }
 
+        [Display(Name = "TB Test Expiry Date")]
+        [DataType(DataType.Date)]
+        public DateTime? TBTestExpiryDate { get; set; }
+
         [Display(Name = "COVID Vaccination Status")]
         public string CovidVaccinationStatus { get; set; } // Fully Vaccinated, Partially, Not Vaccinated
 
         [Display(Name = "Last Vaccination Date")]
         public DateTime? LastVaccinationDate { get; set; }
+
+        [Display(Name = "Vaccine Brand")]
+        [StringLength(100)]
+        public string VaccineBrand { get; set; }
 
         [Display(Name = "Background Check Status")]
         public string BackgroundCheckStatus { get; set; } // Pending, Cleared, Not Cleared
@@ -44,6 +52,15 @@ namespace TechSolutions.Models
         [Display(Name = "Clearance Notes")]
         [StringLength(1000)]
         public string ClearanceNotes { get; set; }
+
+        [Display(Name = "TB Test Completed")]
+        public bool HasTBTest { get; set; }
+
+        [Display(Name = "COVID Vaccination Completed")]
+        public bool HasCOVIDVaccination { get; set; }
+
+        [Display(Name = "Background Check Completed")]
+        public bool HasBackgroundCheck { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
