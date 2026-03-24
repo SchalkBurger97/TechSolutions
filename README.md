@@ -146,7 +146,13 @@ login dialog is exactly what goes here.
 
 **4. Build the solution**
 
-Visual Studio will restore NuGet packages automatically on build.
+Visual Studio will restore NuGet packages automatically on build. 
+If you encounter a missing roslyn/csc.exe error, run the following in the Package Manager Console:
+```
+Update-Package Microsoft.CodeDom.Providers.DotNetCompilerPlatform -r
+```
+
+Then clean and rebuild the solution via Build -> Clean Solution, then Build -> Rebuild Solution.
 
 **5. Run the application**
 
