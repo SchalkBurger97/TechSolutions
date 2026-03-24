@@ -1005,49 +1005,52 @@ else
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script>
     (function () {
-        var ctx = document.getElementById('riskDonut').getContext('2d');
+    var canvas = document.getElementById('riskDonut');
+    if (!canvas) return;
 
-        var safe = @safeCount;
-        var med  = @issuesCount;
-        var high = @highRiskCount;
+    var ctx = canvas.getContext('2d');
 
-        // If all zero show a grey placeholder ring
-        var hasData = (safe + med + high) > 0;
+    var safe = @safeCount;
+    var med  = @issuesCount;
+    var high = @highRiskCount;
 
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: hasData ? [safe, med, high] : [1],
-                    backgroundColor: hasData
-                        ? ['#2e9e6b', '#d48e10', '#c0392b']
-                        : ['#d6e4ef'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                cutout: '72%',
-                animation: { animateRotate: true, duration: 800 },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        enabled: hasData,
-                        callbacks: {
-                            label: function(ctx) {
-                                var labels = ['Low Risk', 'Medium', 'High Risk'];
-                                var total  = safe + med + high;
-                                var pct    = total > 0
-                                    ? Math.round(ctx.parsed / total * 100)
-                                    : 0;
-                                return ' ' + labels[ctx.dataIndex] + ': ' + ctx.parsed + ' (' + pct + '%)';
-                            }
+    // If all zero show a grey placeholder ring
+    var hasData = (safe + med + high) > 0;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: hasData ? [safe, med, high] : [1],
+                backgroundColor: hasData
+                    ? ['#2e9e6b', '#d48e10', '#c0392b']
+                    : ['#d6e4ef'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            cutout: '72%',
+            animation: { animateRotate: true, duration: 800 },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: hasData,
+                    callbacks: {
+                        label: function(ctx) {
+                            var labels = ['Low Risk', 'Medium', 'High Risk'];
+                            var total  = safe + med + high;
+                            var pct    = total > 0
+                                ? Math.round(ctx.parsed / total * 100)
+                                : 0;
+                            return ' ' + labels[ctx.dataIndex] + ': ' + ctx.parsed + ' (' + pct + '%)';
                         }
                     }
                 }
             }
-        });
-    })();
+        }
+    });
+})();
     </script>
 
     <script>

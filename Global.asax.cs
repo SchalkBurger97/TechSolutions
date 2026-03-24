@@ -19,6 +19,15 @@ namespace TechSolutions
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<ApplicationDbContext, TechSolutions.Migrations.Configuration>());
+            try
+            {
+                var migrator = new System.Data.Entity.Migrations.DbMigrator(new TechSolutions.Migrations.Configuration());
+                migrator.Update();
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.WriteAllText(@"C:\Temp\startup_error.txt", ex.ToString());
+            }
         }
     }
 }
