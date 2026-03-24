@@ -1,43 +1,666 @@
 ﻿@model TechSolutions.Models.RegisterViewModel
 @{
     ViewBag.Title = "Register";
+    Layout = null;
 }
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechSolutions — Create Account</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { role = "form" }))
-    {
-        @Html.AntiForgeryToken()
-        <h4>Create a new account.</h4>
-        <hr />
-        @Html.ValidationSummary("", new { @class = "text-danger" })
-        <div class="row">
-            @Html.LabelFor(m => m.Email, new { @class = "col-md-2 col-form-label" })
-            <div class="col-md-10">
-                @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
-            </div>
-        </div>
-        <div class="row">
-            @Html.LabelFor(m => m.Password, new { @class = "col-md-2 col-form-label" })
-            <div class="col-md-10">
-                @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-            </div>
-        </div>
-        <div class="row">
-            @Html.LabelFor(m => m.ConfirmPassword, new { @class = "col-md-2 col-form-label" })
-            <div class="col-md-10">
-                @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control" })
-            </div>
-        </div>
-        <div class="row">
-            <div class="offset-md-2 col-md-10">
-                <input type="submit" value="Register" class="btn btn-outline-dark" />
-            </div>
-        </div>
-    }
-</main>
+        :root {
+            --navy: #07020D;
+            --primary: #0477bf;
+            --primary-glow: #0477bf55;
+            --teal: #04c4d9;
+            --teal-dim: #04c4d933;
+            --surface: #ffffff;
+            --bg-light: #f0f5f9;
+            --text: #1a2733;
+            --muted: #6b7c8d;
+            --border: #d6e4ef;
+            --danger: #c0392b;
+            --success: #2e9e6b;
+            --ease: cubic-bezier(0.65, 0, 0.35, 1);
+        }
 
-@section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
-}
+        html, body {
+            height: 100%;
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--navy);
+            overflow: hidden;
+        }
+
+        .auth-shell {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .auth-dark {
+            flex: 1;
+            background: linear-gradient(160deg, var(--navy) 0%, #0a1628 60%, #051020 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 48px 56px;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .circuit-bg {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.18;
+        }
+
+        .circuit-line {
+            stroke: var(--teal);
+            stroke-width: 1;
+            fill: none;
+            stroke-dasharray: 600;
+            stroke-dashoffset: 600;
+            animation: drawLine 3s var(--ease) forwards;
+        }
+
+            .circuit-line:nth-child(2) {
+                animation-delay: 0.4s;
+            }
+
+            .circuit-line:nth-child(3) {
+                animation-delay: 0.8s;
+            }
+
+            .circuit-line:nth-child(4) {
+                animation-delay: 1.2s;
+                stroke: var(--primary);
+            }
+
+            .circuit-line:nth-child(5) {
+                animation-delay: 1.6s;
+                stroke: var(--primary);
+            }
+
+        .circuit-dot {
+            fill: var(--teal);
+            animation: pulseDot 3s ease-in-out infinite;
+        }
+
+            .circuit-dot:nth-child(6) {
+                animation-delay: 0.5s;
+            }
+
+            .circuit-dot:nth-child(7) {
+                animation-delay: 1s;
+                fill: var(--primary);
+            }
+
+            .circuit-dot:nth-child(8) {
+                animation-delay: 1.5s;
+            }
+
+        @@keyframes drawLine {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @@keyframes pulseDot {
+            0%, 100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .auth-dark::before {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -100px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .auth-dark::after {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--teal-dim) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .auth-brand {
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-brand-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+            display: inline-block;
+        }
+
+            .auth-brand-logo span {
+                color: var(--teal);
+            }
+
+        .auth-brand-tagline {
+            font-size: 0.72rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: rgba(255,255,255,0.35);
+            margin-top: 5px;
+        }
+
+        .auth-hero {
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-hero-eyebrow {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--teal);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .auth-hero-eyebrow::before {
+                content: '';
+                display: block;
+                width: 28px;
+                height: 1.5px;
+                background: var(--teal);
+            }
+
+        .auth-hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 3.5vw, 3rem);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+
+            .auth-hero-title em {
+                font-style: normal;
+                color: var(--teal);
+            }
+
+        .auth-hero-desc {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.7;
+            max-width: 340px;
+        }
+
+        .auth-features {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .auth-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .auth-feature-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(4,196,217,0.12);
+            border: 1px solid rgba(4,196,217,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: var(--teal);
+            flex-shrink: 0;
+        }
+
+        .auth-light {
+            width: 480px;
+            min-width: 420px;
+            background: var(--surface);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 48px 52px;
+            z-index: 2;
+            box-shadow: -24px 0 80px rgba(0,0,0,0.35);
+            overflow-y: auto;
+        }
+
+            .auth-light::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, var(--primary), var(--teal));
+            }
+
+        .auth-panel-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .auth-panel-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .auth-panel-sub {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .auth-field {
+            margin-bottom: 16px;
+        }
+
+            .auth-field label {
+                display: block;
+                font-size: 0.78rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                color: var(--text);
+                margin-bottom: 6px;
+            }
+
+        .auth-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: var(--muted);
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .auth-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px 0 42px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            background: var(--bg-light);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+            .auth-input:focus {
+                border-color: var(--primary);
+                background: var(--surface);
+                box-shadow: 0 0 0 3px rgba(4,119,191,0.12);
+            }
+
+        .auth-input-wrap:focus-within .auth-input-icon {
+            color: var(--primary);
+        }
+
+        .auth-name-row {
+            display: flex;
+            gap: 12px;
+        }
+
+            .auth-name-row .auth-field {
+                flex: 1;
+            }
+
+        .auth-validation-summary {
+            background: #fdf0ee;
+            border: 1.5px solid rgba(192,57,43,0.2);
+            border-left: 4px solid var(--danger);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            font-size: 0.825rem;
+            color: var(--danger);
+        }
+
+            .auth-validation-summary ul {
+                margin: 4px 0 0 16px;
+                padding: 0;
+            }
+
+        .auth-btn {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary) 0%, #0560a0 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .auth-btn::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(135deg, var(--teal) 0%, var(--primary) 100%);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .auth-btn:hover::before {
+                opacity: 1;
+            }
+
+            .auth-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 24px rgba(4,119,191,0.35);
+            }
+
+            .auth-btn span, .auth-btn i {
+                position: relative;
+                z-index: 1;
+            }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+            .auth-switch a {
+                color: var(--primary);
+                font-weight: 700;
+                text-decoration: none;
+            }
+
+                .auth-switch a:hover {
+                    color: var(--teal);
+                }
+
+        .auth-footer {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .pw-strength-wrap {
+            margin-top: 7px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pw-strength-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .pw-strength-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        .pw-strength-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            min-width: 40px;
+        }
+
+        @@keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-light {
+            animation: fadeUp 0.5s 0.1s var(--ease) both;
+        }
+
+        @@media (max-width: 800px) {
+            .auth-dark {
+                display: none;
+            }
+
+            .auth-light {
+                width: 100%;
+                min-width: unset;
+                box-shadow: none;
+                padding: 40px 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-shell">
+
+        <!-- LEFT -->
+        <div class="auth-dark">
+            <svg class="circuit-bg" viewBox="0 0 600 700" preserveAspectRatio="xMidYMid slice">
+                <path class="circuit-line" d="M 0 120 H 200 V 200 H 350 V 140 H 550" />
+                <path class="circuit-line" d="M 0 300 H 100 V 380 H 300 V 320 H 600" />
+                <path class="circuit-line" d="M 50 500 H 250 V 560 H 500 V 480 H 600" />
+                <path class="circuit-line" d="M 450 0 V 140 H 380 V 320 H 450 V 480 H 400 V 600" />
+                <path class="circuit-line" d="M 150 0 V 200 H 220 V 380 H 160 V 560 H 200 V 700" />
+                <circle class="circuit-dot" cx="200" cy="120" r="4" />
+                <circle class="circuit-dot" cx="350" cy="200" r="4" />
+                <circle class="circuit-dot" cx="300" cy="380" r="4" />
+                <circle class="circuit-dot" cx="450" cy="140" r="4" />
+                <circle class="circuit-dot" cx="250" cy="560" r="4" />
+            </svg>
+            <div class="auth-brand">
+                <div class="auth-brand-logo">Tech<span>Solutions</span></div>
+                <div class="auth-brand-tagline">Customer Management System</div>
+            </div>
+            <div class="auth-hero">
+                <div class="auth-hero-eyebrow">New Account</div>
+                <h1 class="auth-hero-title">Join the<br><em>platform</em><br>today.</h1>
+                <p class="auth-hero-desc">Create your account to access the TechSolutions healthcare IT training and customer management system.</p>
+            </div>
+            <div class="auth-features">
+                <div class="auth-feature">
+                    <div class="auth-feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <span>AES-256 encrypted sensitive data</span>
+                </div>
+                <div class="auth-feature">
+                    <div class="auth-feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+                    <span>Real-time data quality scoring</span>
+                </div>
+                <div class="auth-feature">
+                    <div class="auth-feature-icon"><i class="fa-solid fa-lock"></i></div>
+                    <span>Role-based access control</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="auth-light">
+            <div class="auth-panel-label">New account</div>
+            <h2 class="auth-panel-title">Create Account</h2>
+            <p class="auth-panel-sub">Fill in your details to get started</p>
+
+            @using (Html.BeginForm("Register", "Account", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="auth-validation-summary">
+                        <strong><i class="fa-solid fa-triangle-exclamation"></i> Please fix the following:</strong>
+                        @Html.ValidationSummary(false, "")
+                    </div>
+                }
+
+                <div class="auth-name-row">
+                    <div class="auth-field">
+                        <label>First Name</label>
+                        <div class="auth-input-wrap">
+                            @Html.TextBoxFor(m => m.FirstName, new { @class = "auth-input", placeholder = "Jane" })
+                            <i class="fa-solid fa-user auth-input-icon"></i>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label>Last Name</label>
+                        <div class="auth-input-wrap">
+                            @Html.TextBoxFor(m => m.LastName, new { @class = "auth-input", placeholder = "Smith" })
+                            <i class="fa-solid fa-user auth-input-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="auth-field">
+                    <label>Email Address</label>
+                    <div class="auth-input-wrap">
+                        @Html.TextBoxFor(m => m.Email, new { @class = "auth-input", placeholder = "you@example.com" })
+                        <i class="fa-regular fa-envelope auth-input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="auth-field">
+                    <label>Password</label>
+                    <div class="auth-input-wrap">
+                        @Html.PasswordFor(m => m.Password, new { @class = "auth-input", placeholder = "Min. 6 characters", id = "reg-password" })
+                        <i class="fa-solid fa-lock auth-input-icon"></i>
+                    </div>
+                    <div class="pw-strength-wrap">
+                        <div class="pw-strength-bar">
+                            <div class="pw-strength-fill" id="pwFill"></div>
+                        </div>
+                        <span class="pw-strength-label" id="pwLabel"></span>
+                    </div>
+                </div>
+
+                <div class="auth-field">
+                    <label>Confirm Password</label>
+                    <div class="auth-input-wrap">
+                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "auth-input", placeholder = "Repeat password" })
+                        <i class="fa-solid fa-lock auth-input-icon"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-btn">
+                    <span>Create Account</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            }
+
+            <div class="auth-switch">
+                Already have an account? <a href="@Url.Action("Login", "Account")">Sign in</a>
+            </div>
+
+            <div class="auth-footer">
+                &copy; @DateTime.Now.Year TechSolutions &mdash; All data encrypted &amp; secure
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    <script>
+document.getElementById('reg-password').addEventListener('input', function() {
+    var val   = this.value;
+    var fill  = document.getElementById('pwFill');
+    var label = document.getElementById('pwLabel');
+    var score = 0;
+    if (val.length >= 6)           score++;
+    if (/[A-Z]/.test(val))         score++;
+    if (/[0-9]/.test(val))         score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    var cfg = [
+        { pct: '0%',   color: 'var(--border)',  text: '' },
+        { pct: '25%',  color: 'var(--danger)',  text: 'Weak' },
+        { pct: '50%',  color: '#d48e10',        text: 'Fair' },
+        { pct: '75%',  color: 'var(--primary)', text: 'Good' },
+        { pct: '100%', color: 'var(--success)', text: 'Strong' }
+    ][val.length === 0 ? 0 : score];
+    fill.style.width      = cfg.pct;
+    fill.style.background = cfg.color;
+    label.textContent     = cfg.text;
+    label.style.color     = cfg.color;
+});
+    </script>
+</body>
+</html>

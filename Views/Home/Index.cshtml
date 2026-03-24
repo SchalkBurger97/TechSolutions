@@ -1,219 +1,1063 @@
 ﻿@{
     ViewBag.Title = "Dashboard";
+
+    int totalCustomers = ViewBag.TotalCustomers ?? 0;
+    int newThisMonth = ViewBag.NewThisMonth ?? 0;
+    decimal avgQuality = ViewBag.AverageQuality ?? 0m;
+    int issuesCount = ViewBag.IssuesCount ?? 0;
+    int activeEnrollments = ViewBag.ActiveEnrollments ?? 0;
+    int completedThisMonth = ViewBag.CompletedThisMonth ?? 0;
+    decimal outstandingTotal = ViewBag.OutstandingBalance ?? 0m;
+    int expiredDocs = ViewBag.ExpiredDocuments ?? 0;
+    int expiredPayments = ViewBag.ExpiredPayments ?? 0;
+    int pendingClearances = ViewBag.PendingClearances ?? 0;
+    int lowQualityCount = ViewBag.LowQualityCount ?? 0;
+    int highRiskCount = ViewBag.HighRiskCount ?? 0;
+    int highQualityCount = ViewBag.HighQualityCount ?? 0;
+    int medQualityCount = ViewBag.MedQualityCount ?? 0;
+
+    string qualityVariant = avgQuality >= 80 ? "success" : avgQuality >= 60 ? "warning" : "danger";
+    string qualityIcon = avgQuality >= 80 ? "fa-circle-check" : avgQuality >= 60 ? "fa-circle-exclamation" : "fa-circle-xmark";
+    bool hasCustomers = totalCustomers > 0;
+    int totalUrgent = expiredDocs + expiredPayments + pendingClearances + lowQualityCount;
+    int safeCount = Math.Max(0, totalCustomers - highRiskCount - issuesCount);
+    int maxQ = Math.Max(Math.Max(highQualityCount, medQualityCount), Math.Max(lowQualityCount, 1));
+
+    int complianceScore = totalUrgent == 0 ? 100 :
+        (int)Math.Max(0, 100 - (totalUrgent * (100.0 / Math.Max(totalCustomers, 1))));
+    string compVariant = complianceScore >= 80 ? "success" : complianceScore >= 60 ? "warning" : "danger";
 }
 
-<div class="app-theme">
-    <div class="container-fluid">
-
-        <!-- Page Header -->
-        <div class="row" style="margin-bottom: 30px;">
-            <div class="col-md-12">
-                <div class="panel panel-primary">
-                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
-                        <h3 class="panel-title" style="color: #fff; font-size: 24px; margin: 0;">
-                            <i class="fa fa-dashboard"></i> Dashboard
-                        </h3>
-                    </div>
-                    <div class="panel-body" style="padding: 15px; background: var(--color-bg);">
-                        <p style="margin: 0; color: #666;">
-                            <i class="fa fa-calendar"></i> <strong>@DateTime.Now.ToString("dddd, MMMM dd, yyyy")</strong>
-                            <span style="margin: 0 10px;">|</span>
-                            Welcome to TechSolutions Customer Management System
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Metric Cards -->
-        <div class="row" style="margin-bottom: 30px;">
-            <!-- Total Customers -->
-            <div class="col-md-3">
-                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid var(--color-primary);" class="metric-card">
-                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">Total Customers</div>
-                    <div style="font-size: 42px; font-weight: 700; color: var(--color-primary); margin-bottom: 10px;">@ViewBag.TotalCustomers</div>
-                    <div style="color: #5cb85c; font-size: 14px;">
-                        <i class="fa fa-arrow-up"></i> Active accounts
-                    </div>
-                </div>
-            </div>
-
-            <!-- New This Month -->
-            <div class="col-md-3">
-                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid var(--color-secondary);" class="metric-card">
-                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">New This Month</div>
-                    <div style="font-size: 42px; font-weight: 700; color: var(--color-secondary); margin-bottom: 10px;">@ViewBag.NewThisMonth</div>
-                    <div style="color: var(--color-secondary); font-size: 14px;">
-                        <i class="fa fa-plus"></i> Recently added
-                    </div>
-                </div>
-            </div>
-
-            <!-- Average Quality -->
-            <div class="col-md-3">
-                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid #5cb85c;" class="metric-card">
-                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">Average Quality</div>
-                    <div style="font-size: 42px; font-weight: 700; color: #5cb85c; margin-bottom: 10px;">@ViewBag.AverageQuality<span style="font-size: 24px;">%</span></div>
-                    <div style="color: #5cb85c; font-size: 14px;">
-                        <i class="fa fa-check-circle"></i> Data integrity
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quality Issues -->
-            <div class="col-md-3">
-                <div style="background: #fff; border-radius: var(--border-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 25px; text-align: center; transition: var(--transition); border-top: 4px solid #f0ad4e;" class="metric-card">
-                    <div style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; font-weight: 600;">Quality Issues</div>
-                    <div style="font-size: 42px; font-weight: 700; color: #f0ad4e; margin-bottom: 10px;">@ViewBag.IssuesCount</div>
-                    <div style="color: #f0ad4e; font-size: 14px;">
-                        <i class="fa fa-exclamation-triangle"></i> Needs attention
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions & System Status -->
-        <div class="row" style="margin-bottom: 30px;">
-            <!-- Quick Actions -->
-            <div class="col-md-6">
-                <div class="panel panel-default" style="height: 100%;">
-                    <div class="panel-heading" style="background: var(--color-bg); border: none;">
-                        <h4 class="panel-title" style="color: var(--color-primary); margin: 0;">
-                            <i class="fa fa-bolt"></i> Quick Actions
-                        </h4>
-                    </div>
-                    <div class="panel-body" style="padding: 0;">
-                        <div class="list-group" style="margin-bottom: 0;">
-                            <a href="@Url.Action("Create", "Customer")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; border-top: none; padding: 15px 20px; transition: var(--transition);">
-                                <i class="fa fa-plus-circle" style="color: var(--color-primary); margin-right: 10px; font-size: 18px;"></i>
-                                <strong style="color: #333;">Add New Customer</strong>
-                                <span style="float: right; color: #999;"><i class="fa fa-chevron-right"></i></span>
-                            </a>
-
-                            <a href="@Url.Action("Index", "Customer")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; padding: 15px 20px; transition: var(--transition);">
-                                <i class="fa fa-list" style="color: var(--color-secondary); margin-right: 10px; font-size: 18px;"></i>
-                                <strong style="color: #333;">View All Customers</strong>
-                                <span style="float: right; color: #999;"><i class="fa fa-chevron-right"></i></span>
-                            </a>
-
-                            <a href="@Url.Action("Index", "DataQuality")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; padding: 15px 20px; transition: var(--transition);">
-                                <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px; font-size: 18px;"></i>
-                                <strong style="color: #333;">Check Data Quality</strong>
-                                <span class="label label-default" style="float: right; background: #999;">Coming Soon</span>
-                            </a>
-
-                            <a href="@Url.Action("Export", "Reports")" class="list-group-item quick-action-item" style="border-left: none; border-right: none; border-bottom: none; padding: 15px 20px; transition: var(--transition);">
-                                <i class="fa fa-download" style="color: #f0ad4e; margin-right: 10px; font-size: 18px;"></i>
-                                <strong style="color: #333;">Export Reports</strong>
-                                <span class="label label-default" style="float: right; background: #999;">Coming Soon</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Status -->
-            <div class="col-md-6">
-                <div class="panel panel-default" style="height: 100%;">
-                    <div class="panel-heading" style="background: var(--color-bg); border: none;">
-                        <h4 class="panel-title" style="color: var(--color-primary); margin: 0;">
-                            <i class="fa fa-heartbeat"></i> System Status
-                        </h4>
-                    </div>
-                    <div class="panel-body" style="padding: 25px;">
-                        <div class="alert alert-success" style="background: #d4edda; border: 1px solid #3c763d; border-radius: var(--border-radius); margin-bottom: 20px;">
-                            <h5 style="margin: 0 0 5px 0; color: #3c763d;">
-                                <i class="fa fa-check-circle"></i> All Systems Operational
-                            </h5>
-                            <p class="small" style="margin: 0; color: #3c763d;">SQL Server connected and running smoothly</p>
-                        </div>
-
-                        <div style="background: var(--color-bg); padding: 15px; border-radius: var(--border-radius);">
-                            <ul class="list-unstyled" style="margin: 0;">
-                                <li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-                                    <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px;"></i>
-                                    <strong style="color: #333;">Database:</strong> <span style="color: #666;">TechSolutionsDB</span>
-                                </li>
-                                <li style="padding: 8px 0; border-bottom: 1px solid #ddd;">
-                                    <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px;"></i>
-                                    <strong style="color: #333;">Server:</strong> <span style="color: #666;">SQL Server Express</span>
-                                </li>
-                                <li style="padding: 8px 0;">
-                                    <i class="fa fa-check-circle" style="color: #5cb85c; margin-right: 10px;"></i>
-                                    <strong style="color: #333;">Authentication:</strong> <span style="color: #666;">Active</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Getting Started Guide -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="panel panel-default">
-                    <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); border: none;">
-                        <h4 class="panel-title" style="color: #fff; margin: 0;">
-                            <i class="fa fa-rocket"></i> Getting Started
-                        </h4>
-                    </div>
-                    <div class="panel-body" style="padding: 25px;">
-                        <p style="font-size: 16px; color: #666; margin-bottom: 20px;">
-                            Welcome to TechSolutions Customer Management System. Here's how to get started:
-                        </p>
-
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
-                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">1</div>
-                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">Add Your First Customer</h5>
-                                    <p style="color: #666; font-size: 14px; margin: 0;">Click "Add New Customer" to create your first customer record</p>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
-                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">2</div>
-                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">View Customer List</h5>
-                                    <p style="color: #666; font-size: 14px; margin: 0;">Navigate to "Customers" to see all your customer records</p>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
-                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">3</div>
-                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">Monitor Data Quality</h5>
-                                    <p style="color: #666; font-size: 14px; margin: 0;">Check the "Data Quality" page to ensure data integrity</p>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div style="text-align: center; padding: 20px; background: var(--color-bg); border-radius: var(--border-radius); height: 100%;">
-                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 24px; font-weight: bold;">4</div>
-                                    <h5 style="color: var(--color-primary); margin-bottom: 10px;">Generate Reports</h5>
-                                    <p style="color: #666; font-size: 14px; margin: 0;">Use the Reports section to export and analyze data</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            <i class="fa-regular fa-calendar"></i>
+            @DateTime.Now.ToString("dddd, MMMM dd, yyyy")
+        </span>
     </div>
+    <a href="@Url.Action("Create", "Customer")" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Add Customer
+    </a>
 </div>
 
-<style>
-    /* Metric card hover effect */
-    .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+@if (hasCustomers)
+{
+    <!-- ── Urgent Alert Banner ── -->
+    if (totalUrgent > 0)
+    {
+        <div class="ops-alert-banner mb-4">
+            <div class="ops-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="ops-alert-body">
+                <strong>@totalUrgent item@(totalUrgent == 1 ? "" : "s") require your attention today</strong>
+                <div class="ops-alert-chips">
+                    @if (expiredDocs > 0)
+                    {
+                        <span class="ops-chip ops-chip-danger">
+                            <i class="fa-solid fa-id-card"></i> @expiredDocs expired document@(expiredDocs == 1 ? "" : "s")
+                        </span>
+                    }
+                    @if (expiredPayments > 0)
+                    {
+                        <span class="ops-chip ops-chip-danger">
+                            <i class="fa-solid fa-credit-card"></i> @expiredPayments expired payment@(expiredPayments == 1 ? "" : "s")
+                        </span>
+                    }
+                    @if (pendingClearances > 0)
+                    {
+                        <span class="ops-chip ops-chip-warning">
+                            <i class="fa-solid fa-shield-halved"></i> @pendingClearances pending clearance@(pendingClearances == 1 ? "" : "s")
+                        </span>
+                    }
+                    @if (lowQualityCount > 0)
+                    {
+                        <span class="ops-chip ops-chip-warning">
+                            <i class="fa-solid fa-chart-bar"></i> @lowQualityCount low quality score@(lowQualityCount == 1 ? "" : "s")
+                        </span>
+                    }
+                </div>
+            </div>
+            <a href="@Url.Action("Index", "Customer")" class="btn btn-sm btn-default ops-alert-cta">
+                Review <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
     }
 
-    /* List group item hover */
-    .quick-action-item:hover {
-        background: var(--color-bg) !important;
-        border-left: 3px solid var(--color-primary) !important;
-    }
-</style>
+    <!-- ── Row 1: Primary Metrics ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-card-label">Total Customers</div>
+                <div class="stat-card-value">@totalCustomers</div>
+                <div class="stat-card-delta positive">
+                    <i class="fa-solid fa-arrow-up"></i> @newThisMonth new this month
+                </div>
+                <i class="fa-solid fa-users card-icon"></i>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card stat-card-@qualityVariant">
+                <div class="stat-card-label">Avg Data Quality</div>
+                <div class="stat-card-value">@avgQuality<span style="font-size:1rem;font-weight:500;">%</span></div>
+                <div class="stat-card-delta @(avgQuality >= 80 ? "positive" : "negative")">
+                    <i class="fa-solid @qualityIcon"></i>
+                    @(avgQuality >= 80 ? "Healthy" : avgQuality >= 60 ? "Needs work" : "Critical")
+                </div>
+                <i class="fa-solid fa-chart-line card-icon"></i>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card stat-card-info">
+                <div class="stat-card-label">Active Enrollments</div>
+                <div class="stat-card-value stat-card-value-md">@activeEnrollments</div>
+                <div class="stat-card-delta positive">
+                    <i class="fa-solid fa-circle-check"></i> @completedThisMonth completed this month
+                </div>
+                <i class="fa-solid fa-graduation-cap card-icon"></i>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card @(outstandingTotal > 0 ? "stat-card-warning" : "stat-card-success")">
+                <div class="stat-card-label">Outstanding Balance</div>
+                <div class="stat-card-value stat-card-value-sm">R @outstandingTotal.ToString("N0")</div>
+                <div class="stat-card-delta @(outstandingTotal > 0 ? "negative" : "positive")">
+                    <i class="fa-solid fa-@(outstandingTotal > 0 ? "circle-exclamation" : "circle-check")"></i>
+                    @(outstandingTotal > 0 ? "Across all enrollments" : "All fees settled")
+                </div>
+                <i class="fa-solid fa-hand-holding-dollar card-icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Row 2: Quick Actions + Compliance + Risk ── -->
+    <div class="row g-3 mb-4">
+
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-bolt"></i> Quick Actions</h4>
+                </div>
+                <div class="content-card-body p-0">
+                    <a href="@Url.Action("Create", "Customer")" class="quick-action-item">
+                        <span class="quick-action-icon" style="color:var(--color-primary);"><i class="fa-solid fa-user-plus"></i></span>
+                        <span class="quick-action-text">
+                            <strong>Add New Customer</strong>
+                            <small>Create a new customer record</small>
+                        </span>
+                        <i class="fa-solid fa-chevron-right quick-action-arrow"></i>
+                    </a>
+                    <a href="@Url.Action("Index", "Customer")" class="quick-action-item">
+                        <span class="quick-action-icon" style="color:var(--color-secondary);"><i class="fa-solid fa-list"></i></span>
+                        <span class="quick-action-text">
+                            <strong>View All Customers</strong>
+                            <small>Browse and manage records</small>
+                        </span>
+                        <i class="fa-solid fa-chevron-right quick-action-arrow"></i>
+                    </a>
+                    <a href="@Url.Action("Index", "DataQuality")" class="quick-action-item">
+                        <span class="quick-action-icon" style="color:var(--color-success);"><i class="fa-solid fa-circle-check"></i></span>
+                        <span class="quick-action-text">
+                            <strong>System Data Overview</strong>
+                            <small>Review integrity metrics</small>
+                        </span>
+                        <i class="fa-solid fa-chevron-right quick-action-arrow"></i>
+                    </a>
+                    <a href="@Url.Action("Index", "Reports")" class="quick-action-item" style="border-bottom:none;">
+                        <span class="quick-action-icon" style="color:var(--color-warning);"><i class="fa-solid fa-file-lines"></i></span>
+                        <span class="quick-action-text">
+                            <strong>Report Portal</strong>
+                            <small>Export and view system reports</small>
+                        </span>
+                        <i class="fa-solid fa-chevron-right quick-action-arrow"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compliance Health -->
+        <div class="col-md-4">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-shield-halved"></i> Compliance Health</h4>
+                </div>
+                <div class="content-card-body">
+                    <div class="compliance-item">
+                        <div class="compliance-item-left">
+                            <i class="fa-solid fa-id-card @(expiredDocs > 0 ? "text-danger" : "text-success")"></i>
+                            <span>ID Documents</span>
+                        </div>
+                        <span class="badge badge-@(expiredDocs > 0 ? "danger" : "success")">
+                            @(expiredDocs > 0 ? expiredDocs + " Expired" : "All Valid")
+                        </span>
+                    </div>
+                    <div class="compliance-item">
+                        <div class="compliance-item-left">
+                            <i class="fa-solid fa-credit-card @(expiredPayments > 0 ? "text-danger" : "text-success")"></i>
+                            <span>Payment Methods</span>
+                        </div>
+                        <span class="badge badge-@(expiredPayments > 0 ? "danger" : "success")">
+                            @(expiredPayments > 0 ? expiredPayments + " Expired" : "All Valid")
+                        </span>
+                    </div>
+                    <div class="compliance-item">
+                        <div class="compliance-item-left">
+                            <i class="fa-solid fa-shield-halved @(pendingClearances > 0 ? "text-warning" : "text-success")"></i>
+                            <span>Medical Clearances</span>
+                        </div>
+                        <span class="badge badge-@(pendingClearances > 0 ? "warning" : "success")">
+                            @(pendingClearances > 0 ? pendingClearances + " Pending" : "All Clear")
+                        </span>
+                    </div>
+                    <div class="compliance-item" style="border-bottom:none;">
+                        <div class="compliance-item-left">
+                            <i class="fa-solid fa-chart-bar @(lowQualityCount > 0 ? "text-warning" : "text-success")"></i>
+                            <span>Data Quality</span>
+                        </div>
+                        <span class="badge badge-@(lowQualityCount > 0 ? "warning" : "success")">
+                            @(lowQualityCount > 0 ? lowQualityCount + " Below 60%" : "All Healthy")
+                        </span>
+                    </div>
+                    <div class="compliance-overall mt-3">
+                        <div class="compliance-overall-header">
+                            <span style="font-size:0.75rem;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:0.5px;">Overall Compliance</span>
+                            <span style="font-size:0.875rem;font-weight:700;color:var(--color-@compVariant);">@complianceScore%</span>
+                        </div>
+                        <div class="compliance-bar">
+                            <div class="compliance-bar-fill compliance-fill-@compVariant" style="width:@complianceScore%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Donut -->
+        <div class="col-md-4">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-triangle-exclamation"></i> Risk Overview</h4>
+                </div>
+                <div class="content-card-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100% - 53px);">
+                    <div style="position:relative;width:160px;height:160px;">
+                        <canvas id="riskDonut"></canvas>
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
+                            <div style="font-size:1.4rem;font-weight:700;color:var(--color-text);line-height:1;">@totalCustomers</div>
+                            <div style="font-size:0.7rem;color:var(--color-muted);">customers</div>
+                        </div>
+                    </div>
+                    <div class="risk-legend" style="margin-top:20px;display:flex;flex-direction:column;gap:10px;width:100%;padding:0 22px;">
+                        <div class="risk-legend-item">
+                            <span class="risk-dot" style="background:#2e9e6b;"></span>
+                            <span>Low Risk</span>
+                            <strong>@safeCount</strong>
+                        </div>
+                        <div class="risk-legend-item">
+                            <span class="risk-dot" style="background:#d48e10;"></span>
+                            <span>Medium</span>
+                            <strong>@issuesCount</strong>
+                        </div>
+                        <div class="risk-legend-item">
+                            <span class="risk-dot" style="background:#c0392b;"></span>
+                            <span>High Risk</span>
+                            <strong>@highRiskCount</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Row 3: Recent Customers + Quality Distribution ── -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-7">
+            <div class="content-card">
+                <div class="content-card-header d-flex align-items-center justify-content-between">
+                    <h4 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> Recently Added</h4>
+                    <a href="@Url.Action("Index", "Customer")" style="font-size:0.8rem;color:var(--color-primary);font-weight:600;text-decoration:none;">
+                        View all <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="content-card-body p-0" style="display:flex;flex-direction:column;">
+                    @if (ViewBag.RecentCustomers != null)
+                    {
+                        var recentList = ViewBag.RecentCustomers as List<TechSolutions.Models.Customer>;
+                        foreach (var c in recentList)
+                        {
+                            string firstName = (string)(c.FirstName ?? "");
+                            string lastName = (string)(c.LastName ?? "");
+                            string ini = (firstName.Length > 0 ? firstName.Substring(0, 1) : "") +
+                                               (lastName.Length > 0 ? lastName.Substring(0, 1) : "");
+                            string qv = (decimal)c.DataQualityScore >= 80 ? "success" :
+                                               (decimal)c.DataQualityScore >= 60 ? "warning" : "danger";
+                            int daysAgo = (DateTime.Now - (DateTime)c.CreatedDate).Days;
+                            <a href="@Url.Action("Details", "Customer", new { id = c.CustomerID })" class="recent-customer-row">
+                                <div class="recent-customer-avatar">@ini</div>
+                                <div class="recent-customer-info">
+                                    <strong>@c.FullName</strong>
+                                    <small>@c.CustomerCode &middot; @c.CustomerType</small>
+                                </div>
+                                <div class="recent-customer-meta">
+                                    <span class="badge badge-@qv">@c.DataQualityScore%</span>
+                                    <small class="text-muted">@(daysAgo == 0 ? "Today" : daysAgo + "d ago")</small>
+                                </div>
+                            </a>
+                        }
+
+                        // Pad with empty rows so the card always shows 5 rows
+                        int padCount = 4 - recentList.Count;
+                        for (int i = 0; i < padCount; i++)
+                        {
+                            <div class="recent-customer-row recent-customer-empty">
+                                <div class="recent-customer-avatar recent-avatar-empty">
+                                    <i class="fa-solid fa-user" style="opacity:0.25;font-size:0.9rem;"></i>
+                                </div>
+                                <div class="recent-customer-info">
+                                    <span class="empty-row-line" style="width:@(120 + i * 20)px;"></span>
+                                    <span class="empty-row-line" style="width:@(70 + i * 10)px;margin-top:4px;height:10px;"></span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < 4; i++)
+                        {
+                            <div class="recent-customer-row recent-customer-empty">
+                                <div class="recent-customer-avatar recent-avatar-empty">
+                                    <i class="fa-solid fa-user" style="opacity:0.25;font-size:0.9rem;"></i>
+                                </div>
+                                <div class="recent-customer-info">
+                                    <span class="empty-row-line" style="width:@(100 + i * 25)px;"></span>
+                                    <span class="empty-row-line" style="width:@(60 + i * 12)px;margin-top:4px;height:10px;"></span>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-chart-bar"></i> Quality Distribution</h4>
+                </div>
+                <div class="content-card-body">
+                    <div class="quality-bars">
+                        <div class="quality-bar-row">
+                            <span class="quality-bar-label">80–100%</span>
+                            <div class="quality-bar-track">
+                                <div class="quality-bar-fill quality-fill-success" style="width:@(highQualityCount * 100 / maxQ)%"></div>
+                            </div>
+                            <span class="quality-bar-count">@highQualityCount</span>
+                        </div>
+                        <div class="quality-bar-row">
+                            <span class="quality-bar-label">60–79%</span>
+                            <div class="quality-bar-track">
+                                <div class="quality-bar-fill quality-fill-warning" style="width:@(medQualityCount * 100 / maxQ)%"></div>
+                            </div>
+                            <span class="quality-bar-count">@medQualityCount</span>
+                        </div>
+                        <div class="quality-bar-row">
+                            <span class="quality-bar-label">0–59%</span>
+                            <div class="quality-bar-track">
+                                <div class="quality-bar-fill quality-fill-danger" style="width:@(lowQualityCount * 100 / maxQ)%"></div>
+                            </div>
+                            <span class="quality-bar-count">@lowQualityCount</span>
+                        </div>
+                    </div>
+                    <div class="quality-insight mt-4">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>
+                            @if (lowQualityCount == 0 && medQualityCount == 0)
+                            {
+                                <text>All customers have excellent data quality.</text>
+                            }
+                            else if (lowQualityCount > 0)
+                            {
+                                <text><strong>@lowQualityCount customer@(lowQualityCount == 1 ? "" : "s")</strong> below 60% — edit their profiles to improve scores.</text>
+                            }
+                            else
+                            {
+                                <text><strong>@medQualityCount customer@(medQualityCount == 1 ? "" : "s")</strong> between 60–79% — completing missing fields will improve scores.</text>
+                            }
+                        </span>
+                    </div>
+                    <div class="mt-3 text-center">
+                        @if (ViewBag.QualityReportId != null)
+                        {
+                            <a href="@Url.Action("Run", "Reports", new { id = ViewBag.QualityReportId, returnUrl = Url.Action("Index", "Home"), returnLabel = "Back to Dashboard" })" class="btn btn-sm btn-default">
+                                <i class="fa-solid fa-list-check"></i> View Data Quality Report
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Index", "Reports")" class="btn btn-sm btn-default">
+                                <i class="fa-solid fa-file-chart-column"></i> View Reports
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Help & Tutorial ── -->
+    <div class="content-card">
+        <div class="content-card-header" style="cursor:pointer;" onclick="toggleHelp()">
+            <div class="d-flex align-items-center justify-content-between">
+                <h4 class="mb-0"><i class="fa-solid fa-circle-question"></i> Help &amp; Feature Guide</h4>
+                <i class="fa-solid fa-chevron-up" id="helpChevron" style="color:var(--color-primary);transition:transform 0.3s ease;"></i>
+            </div>
+        </div>
+        <div id="helpSection">
+            <div class="content-card-body">
+                <div class="row g-3">
+                    @foreach (var item in new[] {
+                        new { Icon = "fa-users",          Title = "Customer Management",   Desc = "Add, edit and search customers. Each record tracks personal info, contact details, data quality score and risk score. Use the search bar on the Customers page to find records by name, email, phone or code." },
+                        new { Icon = "fa-id-card",        Title = "ID Documents",          Desc = "Upload SA ID numbers, passports and professional registrations. All numbers are AES-256 encrypted. Click the lock icon on a document to reveal the number — this action is logged for audit purposes." },
+                        new { Icon = "fa-credit-card",    Title = "Payment Methods",       Desc = "Store credit/debit cards and bank accounts securely. Card numbers are encrypted and only last 4 digits are shown. The dashboard alerts you when methods are expired or expiring soon." },
+                        new { Icon = "fa-shield-halved",  Title = "Medical Clearance",     Desc = "Track TB tests, COVID vaccination status and background checks for customers attending on-site healthcare training. The dashboard alerts you when renewals are due." },
+                        new { Icon = "fa-graduation-cap", Title = "Course Enrollments",    Desc = "Enrol customers in courses, track fees and payment status. The outstanding balance on this dashboard is the sum of all unpaid fees across all active enrollments." },
+                        new { Icon = "fa-chart-bar",      Title = "Data Quality Scores",   Desc = "Every customer has an auto-calculated score (0–100%) based on profile completeness. Aim for 80%+ across all customers. A full Data Quality chart dashboard is coming soon." }
+                    })
+                    {
+                        <div class="col-md-4">
+                            <div class="help-card">
+                                <div class="help-card-icon">
+                                    <i class="fa-solid @item.Icon"></i>
+                                </div>
+                                <div>
+                                    <div class="help-card-title">@item.Title</div>
+                                    <p class="help-card-desc">@item.Desc</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- ── Getting Started (no customers) ── -->
+    <div class="getting-started-hero mb-4">
+        <div class="gs-hero-icon"><i class="fa-solid fa-rocket"></i></div>
+        <h3>Welcome to TechSolutions CMS</h3>
+        <p>You don't have any customers yet. Follow the steps below to get started.</p>
+        <a href="@Url.Action("Create", "Customer")" class="btn btn-primary btn-lg mt-2">
+            <i class="fa-solid fa-plus"></i> Add Your First Customer
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        @foreach (var step in new[] {
+            new { Num="1", Title="Add Your First Customer", Desc="Click Add Customer above. Fill in personal details, contact info and customer type to get started.",                          Icon="fa-user-plus"     },
+            new { Num="2", Title="Upload ID Documents",     Desc="From the customer profile, upload SA ID, passport or professional registration. All numbers are encrypted automatically.",    Icon="fa-id-card"       },
+            new { Num="3", Title="Add Payment Methods",     Desc="Store card or bank account details securely. Set a primary method and the system tracks expiry dates for you.",               Icon="fa-credit-card"   },
+            new { Num="4", Title="Enrol in Courses",        Desc="Add course enrollments and track fees, payment status and completions. Certificates are recorded on the customer profile.",  Icon="fa-graduation-cap"}
+        })
+        {
+            <div class="col-md-3 col-sm-6">
+                <div class="getting-started-step">
+                    <div class="gs-number">@step.Num</div>
+                    <i class="fa-solid @step.Icon gs-icon"></i>
+                    <h6 class="gs-title">@step.Title</h6>
+                    <p class="gs-desc">@step.Desc</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="content-card">
+        <div class="content-card-header">
+            <h4 class="mb-0"><i class="fa-solid fa-circle-question"></i> Feature Guide</h4>
+        </div>
+        <div class="content-card-body">
+            <div class="row g-3">
+                @foreach (var item in new[] {
+                    new { Icon="fa-shield-halved",  Title="Medical Clearance",   Desc="Track TB tests, COVID vaccination and background checks required for on-site training at healthcare facilities." },
+                    new { Icon="fa-chart-bar",      Title="Data Quality Scores", Desc="Every customer gets an auto-calculated score. Aim for 80%+ by completing all profile fields — names, contact, address and DOB." },
+                    new { Icon="fa-lock",           Title="AES-256 Encryption",  Desc="All sensitive data including ID numbers, card numbers and bank account numbers are encrypted before being stored in the database." }
+                })
+                {
+                    <div class="col-md-4">
+                        <div class="help-card">
+                            <div class="help-card-icon"><i class="fa-solid @item.Icon"></i></div>
+                            <div>
+                                <div class="help-card-title">@item.Title</div>
+                                <p class="help-card-desc">@item.Desc</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts {
+    <style>
+        .ops-alert-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: var(--color-warning-bg);
+            border: 1.5px solid rgba(212,142,16,0.25);
+            border-left: 4px solid var(--color-warning);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            flex-wrap: wrap;
+        }
+
+        .ops-alert-icon {
+            font-size: 1.1rem;
+            color: var(--color-warning);
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+
+        .ops-alert-body {
+            flex: 1;
+            min-width: 200px;
+        }
+
+            .ops-alert-body strong {
+                font-size: 0.875rem;
+                color: var(--color-text);
+                display: block;
+                margin-bottom: 8px;
+            }
+
+        .ops-alert-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .ops-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.775rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        .ops-chip-danger {
+            background: var(--color-danger-bg);
+            color: var(--color-danger);
+            border: 1px solid rgba(192,57,43,0.2);
+        }
+
+        .ops-chip-warning {
+            background: var(--color-warning-bg);
+            color: var(--color-warning);
+            border: 1px solid rgba(212,142,16,0.2);
+        }
+
+        .ops-alert-cta {
+            flex-shrink: 0;
+            align-self: center;
+        }
+
+        .stat-card-delta {
+            font-size: 0.775rem;
+            font-weight: 500;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .stat-card-delta.positive {
+                color: var(--color-success);
+            }
+
+            .stat-card-delta.negative {
+                color: var(--color-danger);
+            }
+
+        .quick-action-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+            .quick-action-item:hover {
+                background: var(--color-primary-light);
+                color: var(--color-primary);
+                padding-left: 24px;
+            }
+
+                .quick-action-item:hover .quick-action-arrow {
+                    color: var(--color-primary);
+                    transform: translateX(3px);
+                }
+
+        .quick-action-disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .quick-action-icon {
+            font-size: 1.1rem;
+            width: 34px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .quick-action-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+            .quick-action-text strong {
+                font-size: 0.875rem;
+                font-weight: 600;
+            }
+
+            .quick-action-text small {
+                font-size: 0.775rem;
+                color: var(--color-muted);
+            }
+
+        .quick-action-arrow {
+            color: var(--color-border);
+            font-size: 0.75rem;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .compliance-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.855rem;
+        }
+
+        .compliance-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .compliance-overall-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .compliance-bar {
+            height: 6px;
+            background: var(--color-border);
+            border-radius: var(--radius-pill);
+            overflow: hidden;
+        }
+
+        .compliance-bar-fill {
+            height: 100%;
+            border-radius: var(--radius-pill);
+            transition: width 0.8s var(--ease-out);
+        }
+
+        .compliance-fill-success {
+            background: linear-gradient(90deg,var(--color-success),#5dbe96);
+        }
+
+        .compliance-fill-warning {
+            background: linear-gradient(90deg,var(--color-warning),#e8ab42);
+        }
+
+        .compliance-fill-danger {
+            background: linear-gradient(90deg,var(--color-danger),#d9534f);
+        }
+
+        .risk-donut-wrap {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .risk-donut {
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0;
+        }
+
+        .risk-donut-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .risk-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .risk-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.825rem;
+        }
+
+            .risk-legend-item strong {
+                margin-left: auto;
+                font-size: 0.9rem;
+            }
+
+        .risk-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .recent-customer-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border);
+            text-decoration: none;
+            color: var(--color-text);
+            transition: var(--transition);
+        }
+
+            .recent-customer-row:hover {
+                background: var(--color-primary-light);
+            }
+
+            .recent-customer-row:last-child {
+                border-bottom: none;
+            }
+
+        .recent-customer-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,var(--color-primary),var(--color-secondary));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .recent-customer-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+            .recent-customer-info strong {
+                font-size: 0.875rem;
+            }
+
+            .recent-customer-info small {
+                font-size: 0.775rem;
+                color: var(--color-muted);
+            }
+
+        .recent-customer-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .quality-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .quality-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quality-bar-label {
+            font-size: 0.775rem;
+            font-weight: 600;
+            color: var(--color-muted);
+            min-width: 54px;
+        }
+
+        .quality-bar-track {
+            flex: 1;
+            height: 8px;
+            background: var(--color-border);
+            border-radius: var(--radius-pill);
+            overflow: hidden;
+        }
+
+        .quality-bar-fill {
+            height: 100%;
+            border-radius: var(--radius-pill);
+            transition: width 0.8s var(--ease-out);
+        }
+
+        .quality-fill-success {
+            background: var(--color-success);
+        }
+
+        .quality-fill-warning {
+            background: var(--color-warning);
+        }
+
+        .quality-fill-danger {
+            background: var(--color-danger);
+        }
+
+        .quality-bar-count {
+            font-size: 0.825rem;
+            font-weight: 700;
+            color: var(--color-text);
+            min-width: 24px;
+            text-align: right;
+        }
+
+        .quality-insight {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.825rem;
+            color: var(--color-muted);
+            background: var(--color-bg);
+            border-radius: var(--radius-sm);
+            padding: 10px 12px;
+        }
+
+            .quality-insight i {
+                color: var(--color-warning);
+                margin-top: 1px;
+                flex-shrink: 0;
+            }
+
+        .help-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            transition: var(--transition);
+        }
+
+            .help-card:hover {
+                border-color: var(--color-primary);
+                box-shadow: var(--shadow-sm);
+            }
+
+        .help-card-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-sm);
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .help-card-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: 4px;
+        }
+
+        .help-card-desc {
+            font-size: 0.8rem;
+            color: var(--color-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .getting-started-hero {
+            background: linear-gradient(135deg,var(--color-primary) 0%,var(--color-secondary) 100%);
+            border-radius: var(--radius-lg);
+            padding: 48px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .gs-hero-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            opacity: 0.85;
+        }
+
+        .getting-started-hero h3 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .getting-started-hero p {
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+
+        .getting-started-step {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 24px 20px;
+            text-align: center;
+            height: 100%;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+            .getting-started-step:hover {
+                border-color: var(--color-primary);
+                box-shadow: var(--shadow-sm);
+                transform: translateY(-3px);
+            }
+
+        .gs-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,var(--color-primary),var(--color-secondary));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .gs-icon {
+            font-size: 1.3rem;
+            opacity: 0.12;
+            color: var(--color-primary);
+            position: absolute;
+            top: 12px;
+            right: 14px;
+        }
+
+        .gs-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+
+        .gs-desc {
+            font-size: 0.8rem;
+            color: var(--color-muted);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .recent-customer-empty {
+            pointer-events: none;
+            cursor: default;
+        }
+
+        .recent-avatar-empty {
+            background: var(--color-bg);
+            border: 1.5px dashed var(--color-border);
+            color: var(--color-border);
+        }
+
+        .empty-row-line {
+            display: block;
+            height: 12px;
+            background: var(--color-border);
+            border-radius: var(--radius-pill);
+            opacity: 0.5;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+    (function () {
+        var ctx = document.getElementById('riskDonut').getContext('2d');
+
+        var safe = @safeCount;
+        var med  = @issuesCount;
+        var high = @highRiskCount;
+
+        // If all zero show a grey placeholder ring
+        var hasData = (safe + med + high) > 0;
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: hasData ? [safe, med, high] : [1],
+                    backgroundColor: hasData
+                        ? ['#2e9e6b', '#d48e10', '#c0392b']
+                        : ['#d6e4ef'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                cutout: '72%',
+                animation: { animateRotate: true, duration: 800 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: hasData,
+                        callbacks: {
+                            label: function(ctx) {
+                                var labels = ['Low Risk', 'Medium', 'High Risk'];
+                                var total  = safe + med + high;
+                                var pct    = total > 0
+                                    ? Math.round(ctx.parsed / total * 100)
+                                    : 0;
+                                return ' ' + labels[ctx.dataIndex] + ': ' + ctx.parsed + ' (' + pct + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    })();
+    </script>
+
+    <script>
+
+        function toggleHelp() {
+            var s = document.getElementById('helpSection');
+            var c = document.getElementById('helpChevron');
+            var open = s.style.display !== 'none';
+            s.style.display = open ? 'none' : 'block';
+            c.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
+    </script>
+}

@@ -1,0 +1,297 @@
+﻿@{
+    ViewBag.Title = "Print Report";
+    Layout = null;
+    var report = ViewBag.Report as TechSolutions.Models.Report;
+    var data = ViewBag.Data as System.Data.DataTable;
+    var paramValues = ViewBag.ParamValues as Dictionary<string, string>;
+    string runAt = ViewBag.RunAt;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@report.ReportName</title>
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            color: #1a2733;
+            background: #fff;
+            padding: 28px 32px;
+        }
+
+        /* Header */
+        .print-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #0477bf;
+        }
+
+        .print-brand {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0477bf;
+            letter-spacing: -0.3px;
+        }
+
+            .print-brand span {
+                color: #04c4d9;
+            }
+
+        .print-meta {
+            text-align: right;
+            font-size: 10px;
+            color: #6b7c8d;
+        }
+
+        .print-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a2733;
+            margin-bottom: 4px;
+        }
+
+        .print-desc {
+            font-size: 11px;
+            color: #6b7c8d;
+            margin-bottom: 14px;
+        }
+
+        /* Parameters summary */
+        .print-params {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .print-param-chip {
+            font-size: 10px;
+            background: #f0f5f9;
+            border: 1px solid #d6e4ef;
+            border-radius: 4px;
+            padding: 2px 8px;
+            color: #6b7c8d;
+        }
+
+            .print-param-chip strong {
+                color: #1a2733;
+            }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        thead th {
+            background: #0477bf;
+            color: #fff;
+            font-weight: 600;
+            font-size: 10px;
+            padding: 7px 10px;
+            text-align: left;
+            white-space: nowrap;
+            border: none;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f0f5f9;
+        }
+
+        tbody td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #d6e4ef;
+            color: #1a2733;
+            font-size: 10.5px;
+            vertical-align: middle;
+        }
+
+        .cell-danger {
+            color: #c0392b;
+            font-weight: 600;
+        }
+
+        .cell-success {
+            color: #2e9e6b;
+            font-weight: 600;
+        }
+
+        .cell-warning {
+            color: #d48e10;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        .print-footer {
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 1px solid #d6e4ef;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9.5px;
+            color: #6b7c8d;
+        }
+
+        /* Summary row */
+        .print-summary {
+            margin-top: 10px;
+            font-size: 10.5px;
+            color: #6b7c8d;
+        }
+
+        /* Print controls — hidden when printing */
+        .no-print {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .btn-print {
+            background: #0477bf;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-close-tab {
+            background: #f0f5f9;
+            color: #6b7c8d;
+            border: 1px solid #d6e4ef;
+            border-radius: 6px;
+            padding: 7px 16px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            thead th {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            tbody tr:nth-child(even) {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Print controls (hidden when printing) -->
+    <div class="no-print">
+        <button class="btn-print" onclick="window.print()">
+            🖨 Print / Save as PDF
+        </button>
+        <button class="btn-close-tab" onclick="window.close()">
+            ✕ Close
+        </button>
+    </div>
+
+    <!-- Report header -->
+    <div class="print-header">
+        <div>
+            <div class="print-brand">Tech<span>Solutions</span></div>
+            <div style="font-size:9.5px;color:#6b7c8d;margin-top:2px;">Customer Management System</div>
+        </div>
+        <div class="print-meta">
+            <div>Generated: @runAt</div>
+            <div>@data.Rows.Count record@(data.Rows.Count == 1 ? "" : "s")</div>
+        </div>
+    </div>
+
+    <!-- Report title -->
+    <div class="print-title">@report.ReportName</div>
+    <div class="print-desc">@report.Description</div>
+
+    <!-- Parameters used -->
+    @if (paramValues != null && paramValues.Any(kv => !string.IsNullOrWhiteSpace(kv.Value)))
+    {
+        <div class="print-params">
+            @foreach (var kv in paramValues.Where(kv => !string.IsNullOrWhiteSpace(kv.Value)))
+            {
+                <span class="print-param-chip"><strong>@kv.Key:</strong> @kv.Value</span>
+            }
+        </div>
+    }
+
+    <!-- Data table -->
+    @if (data != null && data.Rows.Count > 0)
+    {
+        <table>
+            <thead>
+                <tr>
+                    @foreach (System.Data.DataColumn col in data.Columns)
+                    {
+                        <th>@col.ColumnName</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (System.Data.DataRow row in data.Rows)
+                {
+                    <tr>
+                        @foreach (System.Data.DataColumn col in data.Columns)
+                        {
+                            string val = row[col] == DBNull.Value ? "" : row[col].ToString();
+                            string cellCls = val == "EXPIRED" ? "cell-danger" :
+                                             val == "No" ? "cell-danger" :
+                                             val == "Verified" ? "cell-success" :
+                                             val == "Yes" ? "cell-success" :
+                                             val == "Pending" ? "cell-warning" :
+                                             val == "Active" ? "cell-success" :
+                                             val == "Completed" ? "cell-success" : "";
+                            <td class="@cellCls">@val</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="print-summary">
+            Total: @data.Rows.Count record@(data.Rows.Count == 1 ? "" : "s")
+        </div>
+    }
+    else
+    {
+        <p style="color:#6b7c8d;font-size:11px;margin-top:16px;">No data returned for the selected parameters.</p>
+    }
+
+    <!-- Footer -->
+    <div class="print-footer">
+        <span>TechSolutions Customer Management System</span>
+        <span>@report.ReportName &mdash; @DateTime.Now.ToString("dd MMM yyyy")</span>
+    </div>
+
+</body>
+</html>

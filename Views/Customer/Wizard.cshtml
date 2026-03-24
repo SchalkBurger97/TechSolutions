@@ -3,454 +3,1033 @@
 @{
     ViewBag.Title = "New Customer Enrollment";
     int currentStep = ViewBag.CurrentStep ?? 1;
+    int totalSteps = 6;
+
+    var steps = new[] {
+        new { Label = "Basic Info",   Icon = "fa-solid fa-user"              },
+        new { Label = "Address",      Icon = "fa-solid fa-location-dot"      },
+        new { Label = "ID Documents", Icon = "fa-solid fa-id-card"           },
+        new { Label = "Payment",      Icon = "fa-solid fa-credit-card"       },
+        new { Label = "Clearance",    Icon = "fa-solid fa-shield-halved"     },
+        new { Label = "Review",       Icon = "fa-solid fa-clipboard-check"   }
+    };
 }
-<div class="app-theme">
 
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-md-offset-1" style="width:100%">
-                <!-- Wizard Header -->
-                <div class="page-header">
-                    <h2>New Customer Enrollment</h2>
-                    <p class="text-muted">Complete the steps below to enroll a new learner</p>
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-user-plus"></i> New Customer Enrollment</h2>
+        <span class="text-muted" style="font-size:0.875rem;">Complete all steps to enrol a new customer</span>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-default">
+        <i class="fa-solid fa-xmark"></i> Cancel
+    </a>
+</div>
+
+<!-- ── Progress Stepper ── -->
+<div class="wizard-track mb-4">
+    <div class="wizard-line"></div>
+    @for (int i = 0; i < totalSteps; i++)
+    {
+        int stepNum = i + 1;
+        string stateClass = stepNum < currentStep ? "wz-completed"
+                          : stepNum == currentStep ? "wz-active"
+                          : "";
+        <div class="wz-step @stateClass">
+            <div class="wz-bubble">
+                @if (stepNum < currentStep)
+                {
+                    <i class="fa-solid fa-check"></i>
+                }
+                else
+                {
+                    <i class="@steps[i].Icon"></i>
+                }
+            </div>
+            <div class="wz-label">@steps[i].Label</div>
+        </div>
+    }
+</div>
+
+<!-- ── Wizard Card ── -->
+<div class="content-card">
+    <div class="content-card-header d-flex align-items-center justify-content-between">
+        <h4 class="mb-0">
+            <i class="@steps[currentStep - 1].Icon"></i>
+            Step @currentStep of @totalSteps &mdash; @steps[currentStep - 1].Label
+        </h4>
+        <span class="wz-progress-text">@((int)Math.Round((double)(currentStep - 1) / (totalSteps - 1) * 100))% complete</span>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="wz-progress-bar-wrap">
+        <div class="wz-progress-bar-fill" style="width: @((int)Math.Round((double)(currentStep - 1) / (totalSteps - 1) * 100))%"></div>
+    </div>
+
+    <div class="content-card-body">
+        @using (Html.BeginForm("Wizard", "Customer", FormMethod.Post, new { id = "wizardForm", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.CustomerID)
+            @Html.HiddenFor(m => m.CustomerCode)
+            @Html.Hidden("currentStep", currentStep)
+
+            <!-- ════════════════════════════════
+                 STEP 1 — Basic Information
+                 ════════════════════════════════ -->
+            if (currentStep == 1)
+            {
+                <div class="alert alert-info mb-4">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <strong>Data Quality:</strong> Complete and accurate information ensures smooth enrollment and certificate delivery.
                 </div>
 
-                <!-- Progress Steps -->
-                <div class="wizard-steps">
-                    <div class="step @(currentStep >= 1 ? "active" : "") @(currentStep > 1 ? "completed" : "")">
-                        <div class="step-number">1</div>
-                        <div class="step-label">Basic Info</div>
+                <!-- Customer Code (read-only) -->
+                <div class="form-group mb-4">
+                    <label class="control-label">Customer Code</label>
+                    <div class="customer-code-display">
+                        <i class="fa-solid fa-fingerprint"></i>
+                        <span>@Model.CustomerCode</span>
                     </div>
-                    <div class="step @(currentStep >= 2 ? "active" : "") @(currentStep > 2 ? "completed" : "")">
-                        <div class="step-number">2</div>
-                        <div class="step-label">Address</div>
+                    <span class="help-block">Auto-generated — cannot be changed</span>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Left Column -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.FirstName, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control has-icon", placeholder = "Enter first name" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "field-validation-error" })
+                            <span class="help-block">Letters, hyphens and apostrophes only</span>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Email, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-regular fa-envelope input-icon"></i>
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control has-icon", type = "email", placeholder = "example@email.com" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "field-validation-error" })
+                            <span class="help-block">Valid email address required</span>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CustomerType, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.CustomerType, (SelectList)ViewBag.CustomerTypes, "Select customer type…", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.CustomerType, "", new { @class = "field-validation-error" })
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Gender, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.Gender, (SelectList)ViewBag.Genders, "Select gender…", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Gender, "", new { @class = "field-validation-error" })
+                            <span class="help-block">Optional but recommended for complete records</span>
+                        </div>
                     </div>
-                    <div class="step @(currentStep >= 3 ? "active" : "") @(currentStep > 3 ? "completed" : "")">
-                        <div class="step-number">3</div>
-                        <div class="step-label">ID Documents</div>
-                    </div>
-                    <div class="step @(currentStep >= 4 ? "active" : "") @(currentStep > 4 ? "completed" : "")">
-                        <div class="step-number">4</div>
-                        <div class="step-label">Payment</div>
-                    </div>
-                    <div class="step @(currentStep >= 5 ? "active" : "") @(currentStep > 5 ? "completed" : "")">
-                        <div class="step-number">5</div>
-                        <div class="step-label">Clearance</div>
-                    </div>
-                    <div class="step @(currentStep == 6 ? "active" : "")">
-                        <div class="step-number">6</div>
-                        <div class="step-label">Review</div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.LastName, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                @Html.TextBoxFor(m => m.LastName, new { @class = "form-control has-icon", placeholder = "Enter last name" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "field-validation-error" })
+                            <span class="help-block">Letters, hyphens and apostrophes only</span>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Phone, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-phone input-icon"></i>
+                                @Html.TextBoxFor(m => m.Phone, new { @class = "form-control has-icon", placeholder = "0123456789", maxlength = "10" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "field-validation-error" })
+                            <span class="help-block">10-digit SA number starting with 0</span>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.DateOfBirth, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-regular fa-calendar input-icon"></i>
+                                @Html.TextBoxFor(m => m.DateOfBirth, "{0:yyyy-MM-dd}", new { @class = "form-control has-icon", type = "date", max = DateTime.Now.AddYears(-16).ToString("yyyy-MM-dd") })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "field-validation-error" })
+                            <span class="help-block">Must be 16 years or older</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Wizard Form -->
-                <div class="panel panel-default">
-                    <div class="panel-body">
-                        @using (Html.BeginForm("Wizard", "Customer", FormMethod.Post, new { @class = "form-horizontal" }))
+                <!-- ── Identity Number ── -->
+                <hr class="my-4" />
+
+                <div class="id-section-header mb-3">
+                    <i class="fa-solid fa-lock" style="color:var(--color-danger);"></i>
+                    <span>Identity Number</span>
+                    <span class="id-section-badge"><i class="fa-solid fa-shield-halved"></i> Encrypted before storage</span>
+                </div>
+
+                <!-- ID Type selector -->
+                <div class="form-group mb-3" style="max-width:320px;">
+                    @Html.LabelFor(m => m.IDType, new { @class = "control-label" })
+                    @Html.DropDownListFor(m => m.IDType,
+                        new SelectList(new[]
                         {
-                            @Html.AntiForgeryToken()
-                            @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
-                            @Html.HiddenFor(m => m.CustomerID)
-                            @Html.HiddenFor(m => m.CustomerCode)
-                            @Html.Hidden("currentStep", currentStep)
+                            new { Value = "ID",       Text = "SA ID Number" },
+                            new { Value = "Passport", Text = "Passport Number" }
+                        }, "Value", "Text"),
+                        "Select ID type…",
+                        new { @class = "form-control", id = "idTypeSelect" })
+                    @Html.ValidationMessageFor(m => m.IDType, "", new { @class = "field-validation-error" })
+                </div>
 
-                            <!-- STEP 1: Basic Information -->
-                            if (currentStep == 1)
+                <!-- SA ID field (shown when IDType == "ID") -->
+                <div id="saIdSection" style="display:none; max-width:420px;">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.IDNumber, new { @class = "control-label" })
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-lock input-icon" style="color:var(--color-danger);"></i>
+                            @Html.TextBoxFor(m => m.IDNumber, new
                             {
-                                <h3>Step 1: Basic Information</h3>
-                                <hr />
+                                @class = "form-control has-icon",
+                                placeholder = "13-digit SA ID Number (YYMMDDGSSSCAZ)",
+                                maxlength = "13",
+                                id = "idNumberInput",
+                                autocomplete = "off"
+                            })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.IDNumber, "", new { @class = "field-validation-error" })
+                        <span class="help-block">Exactly 13 digits — format: YYMMDDGSSSCAZ</span>
+                    </div>
+                </div>
 
-                                <!-- Customer Code (FULL WIDTH - unchanged) -->
-                                <div class="form-group">
-                                    @Html.LabelFor(m => m.CustomerCode, new { @class = "col-md-3 control-label" })
-                                    <div class="col-md-9">
-                                        <p class="form-control-static"><strong>@Model.CustomerCode</strong></p>
-                                    </div>
-                                </div>
-
-                                <!-- START 2 COLUMN LAYOUT -->
-                                <div class="row">
-
-                                    <!-- LEFT COLUMN -->
-                                    <div class="col-md-6">
-
-                                        <div class="form-group">
-                                            @Html.LabelFor(m => m.FirstName, new { @class = "control-label" })
-                                            @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", placeholder = "Enter first name", required = "required" })
-                                            @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
-                                            <span class="help-block">Required field</span>
-                                        </div>
-
-                                        <div class="form-group">
-                                            @Html.LabelFor(m => m.Email, new { @class = "control-label" })
-                                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", type = "email", placeholder = "example@email.com", required = "required" })
-                                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
-                                            <span class="help-block">Valid email address required</span>
-                                        </div>
-
-                                        <div class="form-group">
-                                            @Html.LabelFor(m => m.CustomerType, new { @class = "control-label" })
-                                            @Html.DropDownListFor(m => m.CustomerType, (SelectList)ViewBag.CustomerTypes, "Select learner type...", new { @class = "form-control", required = "required" })
-                                            @Html.ValidationMessageFor(m => m.CustomerType, "", new { @class = "text-danger" })
-                                        </div>
-
-                                        <div class="form-group">
-                                            @Html.LabelFor(m => m.Gender, new { @class = "control-label" })
-                                            @Html.DropDownListFor(m => m.Gender, (SelectList)ViewBag.Genders, "Select gender...", new { @class = "form-control" })
-                                            @Html.ValidationMessageFor(m => m.Gender, "", new { @class = "text-danger" })
-                                            <span class="help-block">Optional but recommended for complete records</span>
-                                        </div>
-
-                                    </div>
-
-                                    <!-- RIGHT COLUMN -->
-                                    <div class="col-md-6">
-
-                                        <div class="form-group">
-                                            @Html.LabelFor(m => m.LastName, new { @class = "control-label" })
-                                            @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", placeholder = "Enter last name", required = "required" })
-                                            @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
-                                            <span class="help-block">Required field</span>
-                                        </div>
-
-                                        <div class="form-group">
-                                            @Html.LabelFor(m => m.Phone, new { @class = "control-label" })
-                                            @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", placeholder = "0123456789", required = "required", pattern = "[0-9]{10}", maxlength = "10" })
-                                            @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-danger" })
-                                            <span class="help-block">10-digit phone number (e.g., 0123456789)</span>
-                                        </div>
-
-                                        <div class="form-group">
-                                            @Html.LabelFor(m => m.DateOfBirth, new { @class = "control-label" })
-                                            @Html.TextBoxFor(m => m.DateOfBirth, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", max = DateTime.Now.AddYears(-16).ToString("yyyy-MM-dd") })
-                                            @Html.ValidationMessageFor(m => m.DateOfBirth, "", new { @class = "text-danger" })
-                                            <span class="help-block">Required for student verification (must be 16+ years old)</span>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-                                <!-- END 2 COLUMN LAYOUT -->
-
-                                <!-- ALERT (FULL WIDTH - unchanged) -->
-                                <div class="alert alert-info">
-                                    <i class="fa fa-info-circle"></i> <strong>Data Quality:</strong> Complete information ensures smooth course enrollment and certificate delivery.
-                                </div>
-                            }
-
-                            <!-- STEP 2: Address & Contact -->
-                            if (currentStep == 2)
+                <!-- Passport field (shown when IDType == "Passport") -->
+                <div id="passportSection" style="display:none; max-width:420px;">
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.PassportNumber, new { @class = "control-label" })
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-lock input-icon" style="color:var(--color-danger);"></i>
+                            @Html.TextBoxFor(m => m.PassportNumber, new
                             {
-                                <h3>Step 2: Address & Contact Details</h3>
-                                <hr />
-                                <div class="alert alert-warning">
-                                    <i class="fa fa-exclamation-triangle"></i> <strong>Important:</strong> Complete address required for shipping certificates and course materials.
-                                </div>
+                                @class = "form-control has-icon",
+                                placeholder = "Passport Number",
+                                id = "passportInput",
+                                autocomplete = "off"
+                            })
+                        </div>
+                        @Html.ValidationMessageFor(m => m.PassportNumber, "", new { @class = "field-validation-error" })
+                        <span class="help-block">As shown on your passport</span>
+                    </div>
+                </div>
+            }
 
-                                <div class="form-group">
-                                    @Html.LabelFor(m => m.Address, new { @class = "col-md-3 control-label" })
-                                    <div class="col-md-9">
-                                        @Html.TextBoxFor(m => m.Address, new { @class = "form-control", placeholder = "Street address", required = "required", minlength = "5" })
-                                        @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
-                                        <span class="help-block">Full street address (minimum 5 characters)</span>
-                                    </div>
-                                </div>
+            <!-- ════════════════════════════════
+                 STEP 2 — Address & Contact
+                 ════════════════════════════════ -->
+            if (currentStep == 2)
+            {
+                <div class="alert alert-warning mb-4">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <strong>Important:</strong> A complete address is required for shipping certificates and course materials.
+                </div>
 
-                                <div class="form-group">
-                                    @Html.LabelFor(m => m.City, new { @class = "col-md-3 control-label" })
-                                    <div class="col-md-9">
-                                        @Html.TextBoxFor(m => m.City, new { @class = "form-control", placeholder = "City", required = "required", minlength = "2" })
-                                        @Html.ValidationMessageFor(m => m.City, "", new { @class = "text-danger" })
-                                        <span class="help-block">City name required</span>
-                                    </div>
-                                </div>
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Address, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-location-dot input-icon"></i>
+                                @Html.TextBoxFor(m => m.Address, new { @class = "form-control has-icon", placeholder = "e.g. 12 Main Street, Sandton" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Address, "", new { @class = "field-validation-error" })
+                            <span class="help-block">Full street address (minimum 5 characters)</span>
+                        </div>
+                    </div>
 
-                                <div class="form-group">
-                                    @Html.LabelFor(m => m.Province, new { @class = "col-md-3 control-label" })
-                                    <div class="col-md-9">
-                                        @Html.DropDownListFor(m => m.Province, (SelectList)ViewBag.Provinces, "Select province...", new { @class = "form-control", required = "required" })
-                                        @Html.ValidationMessageFor(m => m.Province, "", new { @class = "text-danger" })
-                                        <span class="help-block">South African province required</span>
-                                    </div>
-                                </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.City, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-city input-icon"></i>
+                                @Html.TextBoxFor(m => m.City, new { @class = "form-control has-icon", placeholder = "e.g. Johannesburg" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.City, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
 
-                                <div class="form-group">
-                                    @Html.LabelFor(m => m.PostalCode, new { @class = "col-md-3 control-label" })
-                                    <div class="col-md-9">
-                                        @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control", placeholder = "0000", required = "required", pattern = "[0-9]{4}", maxlength = "4" })
-                                        @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "text-danger" })
-                                        <span class="help-block">4-digit postal code (e.g., 2196)</span>
-                                    </div>
-                                </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PostalCode, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-envelope input-icon"></i>
+                                @Html.TextBoxFor(m => m.PostalCode, new { @class = "form-control has-icon", placeholder = "e.g. 2196", maxlength = "4" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.PostalCode, "", new { @class = "field-validation-error" })
+                            <span class="help-block">4-digit SA postal code</span>
+                        </div>
+                    </div>
 
-                                <div class="alert alert-info">
-                                    <i class="fa fa-info-circle"></i> <strong>Why we need this:</strong> Physical certificates and course materials will be shipped to this address upon course completion.
-                                </div>
-                            }
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Province, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.Province, (SelectList)ViewBag.Provinces, "Select province…", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Province, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                </div>
 
-                            <!-- STEP 3: ID Documents Placeholder -->
-                            if (currentStep == 3)
+                <div class="alert alert-info mt-3">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <strong>Why we need this:</strong> Physical certificates and course materials will be shipped to this address upon course completion.
+                </div>
+            }
+
+            <!-- ════════════════════════════════
+                 STEP 3 — ID Documents
+                 ════════════════════════════════ -->
+            if (currentStep == 3)
+            {
+                <div class="alert alert-info mb-4">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Supporting documents can be uploaded after the customer profile is created.
+                </div>
+
+                <div class="placeholder-step">
+                    <i class="fa-solid fa-id-card placeholder-icon"></i>
+                    <h5>Supporting documents can be uploaded after profile creation</h5>
+                    <p>Once the customer record is saved, you'll be able to upload the following from the customer profile page:</p>
+                    <div class="row g-2 mt-3">
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-car-side"></i>
+                                <span>Driver's License</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-stethoscope"></i>
+                                <span>HPCSA / SANC Registration</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-briefcase"></i>
+                                <span>Proof of Employment</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted mt-3" style="font-size:0.825rem;">Click <strong>Next</strong> to continue to Payment Information.</p>
+                </div>
+            }
+
+            <!-- ════════════════════════════════
+                 STEP 4 — Payment
+                 ════════════════════════════════ -->
+            if (currentStep == 4)
+            {
+                <div class="alert alert-warning mb-4">
+                    <i class="fa-solid fa-lock"></i>
+                    <strong>Secure Information</strong> — Payment data is stored with PCI-DSS compliant encryption.
+                </div>
+
+                <div class="placeholder-step">
+                    <i class="fa-solid fa-credit-card placeholder-icon"></i>
+                    <h5>Payment methods can be added after profile creation</h5>
+                    <p>The following payment methods will be available from the customer profile page:</p>
+                    <div class="row g-2 mt-3">
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-credit-card"></i>
+                                <span>Credit / Debit Card</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-building-columns"></i>
+                                <span>Bank Transfer (EFT)</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-file-invoice"></i>
+                                <span>Corporate Billing</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted mt-3" style="font-size:0.825rem;">Click <strong>Next</strong> to continue to Medical Clearance.</p>
+                </div>
+            }
+
+            <!-- ════════════════════════════════
+                 STEP 5 — Medical Clearance
+                 ════════════════════════════════ -->
+            if (currentStep == 5)
+            {
+                <div class="alert alert-info mb-4">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Medical clearance is only required for on-site hospital training and can be completed later.
+                </div>
+
+                <div class="placeholder-step">
+                    <i class="fa-solid fa-shield-halved placeholder-icon"></i>
+                    <h5>Medical clearance can be completed later</h5>
+                    <p>Required only when scheduling on-site training at healthcare facilities:</p>
+                    <div class="row g-2 mt-3">
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-lungs"></i>
+                                <span>TB Test (within 6 months)</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-syringe"></i>
+                                <span>COVID-19 Vaccination</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="doc-type-card">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span>Background Clearance</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted mt-3" style="font-size:0.825rem;">Click <strong>Next</strong> to review and submit.</p>
+                </div>
+            }
+
+            <!-- ════════════════════════════════
+                 STEP 6 — Review & Submit
+                 ════════════════════════════════ -->
+            if (currentStep == 6)
+            {
+                if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger mb-4">
+                        <strong><i class="fa-solid fa-triangle-exclamation"></i> Please fix the following before submitting:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach (var key in ViewData.ModelState.Keys)
                             {
-                                <h3>Step 3: Identification Documents</h3>
-                                <hr />
-                                <div class="alert alert-warning">
-                                    <i class="fa fa-lock"></i> <strong>Secure Information</strong> - This data will be encrypted
-                                </div>
-                                <p class="text-muted">You can add ID documents after creating the customer profile. Click "Next" to continue.</p>
-                                <p>Once the customer is created, you'll be able to upload:</p>
-                                <ul>
-                                    <li>South African ID Document or Passport</li>
-                                    <li>Professional Registration (HPCSA, SANC, etc.)</li>
-                                    <li>Proof of employment (for corporate learners)</li>
-                                </ul>
-                            }
-
-                            <!-- STEP 4: Payment Placeholder -->
-                            if (currentStep == 4)
-                            {
-                                <h3>Step 4: Payment Information</h3>
-                                <hr />
-                                <div class="alert alert-warning">
-                                    <i class="fa fa-lock"></i> <strong>Secure Information</strong> - Payment data will be encrypted
-                                </div>
-                                <p class="text-muted">Payment methods can be added after creating the customer profile. Click "Next" to continue.</p>
-                                <p>Accepted payment methods:</p>
-                                <ul>
-                                    <li>Credit/Debit Card (Visa, Mastercard)</li>
-                                    <li>Bank Transfer (EFT)</li>
-                                    <li>Corporate Billing (for company-sponsored learners)</li>
-                                </ul>
-                            }
-
-                            <!-- STEP 5: Medical Clearance Placeholder -->
-                            if (currentStep == 5)
-                            {
-                                <h3>Step 5: Medical Clearance</h3>
-                                <hr />
-                                <p class="text-muted">Medical clearance is required only for on-site hospital training. You can complete this step later.</p>
-                                <p>Required for on-site training at healthcare facilities:</p>
-                                <ul>
-                                    <li>TB Test (within 6 months)</li>
-                                    <li>COVID-19 Vaccination Status</li>
-                                    <li>Background Check Clearance</li>
-                                </ul>
-                                <div class="alert alert-info">
-                                    <i class="fa fa-info-circle"></i> This step can be completed later when scheduling on-site training.
-                                </div>
-                            }
-
-                            <!-- STEP 6: Review & Submit -->
-                            if (currentStep == 6)
-                            {
-                                if (!ViewData.ModelState.IsValid)
+                                var state = ViewData.ModelState[key];
+                                if (state.Errors.Count > 0)
                                 {
-                                    <div class="alert alert-danger">
-                                        <h4><i class="fa fa-exclamation-triangle"></i> Validation Errors</h4>
-                                        <p>Please review and correct the following errors before submitting:</p>
-                                        <ul>
-                                            @foreach (var key in ViewData.ModelState.Keys)
-                                            {
-                                                var state = ViewData.ModelState[key];
-                                                if (state.Errors.Count > 0)
-                                                {
-                                                    foreach (var error in state.Errors)
-                                                    {
-                                                        <li><strong>@key:</strong> @error.ErrorMessage</li>
-                                                    }
-                                                }
-                                            }
-                                        </ul>
-                                        <p class="text-muted">
-                                            <small>Click the "Edit" buttons below to go back and fix these issues.</small>
-                                        </p>
-                                    </div>
+                                    foreach (var error in state.Errors)
+                                    {
+                                        <li><strong>@key:</strong> @error.ErrorMessage</li>
+                                    }
                                 }
-
-                                <h3 class="mt-0">Step 6: Review & Submit</h3>
-                                <hr />
-                                <p class="lead mb-3">Please review the information before submitting:</p>
-
-                                <div class="row">
-                                    <!-- BASIC INFO -->
-                                    <div class="col-md-6">
-                                        <div class="panel panel-info">
-                                            <div class="panel-heading">
-                                                <strong>Basic Information</strong>
-                                                <a href="@Url.Action("Wizard", new { step = 1 })" class="btn btn-xs btn-default pull-right">
-                                                    <i class="fa fa-pencil"></i> Edit
-                                                </a>
-                                            </div>
-                                            <div class="panel-body">
-
-                                                <table class="table table-condensed table-borderless review-table">
-                                                    <tr>
-                                                        <td class="label-col">Customer Code:</td>
-                                                        <td><strong>@Model.CustomerCode</strong></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="label-col">Name:</td>
-                                                        <td>@Model.FirstName @Model.LastName</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="label-col">Email:</td>
-                                                        <td>@Model.Email</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="label-col">Phone:</td>
-                                                        <td>@Model.Phone</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="label-col">Learner Type:</td>
-                                                        <td><span class="label label-info">@Model.CustomerType</span></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="label-col">Date of Birth:</td>
-                                                        <td>@(Model.DateOfBirth?.ToString("MMMM dd, yyyy") ?? "Not provided")</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="label-col">Gender:</td>
-                                                        <td>@(Model.Gender ?? "Not specified")</td>
-                                                    </tr>
-                                                </table>
-
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- ADDRESS -->
-                                    <div class="col-md-6">
-                                        <div class="panel panel-success">
-                                            <div class="panel-heading">
-                                                <strong>Address</strong>
-                                                <a href="@Url.Action("Wizard", new { step = 2 })" class="btn btn-xs btn-default pull-right">
-                                                    <i class="fa fa-pencil"></i> Edit
-                                                </a>
-                                            </div>
-                                            <div class="panel-body">
-
-                                                <address class="review-address">
-                                                    @Model.Address<br />
-                                                    @Model.City, @Model.Province @Model.PostalCode<br />
-                                                    South Africa
-                                                </address>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="alert alert-warning mt-3">
-                                    <i class="fa fa-info-circle"></i>
-                                    <strong>Next Steps:</strong> After submitting, you'll be able to add ID documents, payment methods, and medical clearance from the customer details page.
-                                </div>
                             }
+                        </ul>
+                        <p class="mb-0 mt-2" style="font-size:0.825rem;">Use the Edit buttons below or the Previous button to go back and correct these.</p>
+                    </div>
+                }
 
-                            <!-- Navigation Buttons -->
-                            <hr />
-                            <div class="form-group">
-                                <div class="col-md-12 text-center">
-                                    @if (currentStep > 1)
-                                    {
-                                        <button type="submit" name="action" value="Previous" class="btn btn-default btn-lg" formnovalidate="formnovalidate">
-                                            <i class="fa fa-arrow-left"></i> Previous
-                                        </button>
-                                    }
-
-                                    @if (currentStep < 6)
-                                    {
-                                        <button type="submit" name="action" value="Next" class="btn btn-primary btn-lg">
-                                            Next <i class="fa fa-arrow-right"></i>
-                                        </button>
-                                    }
-
-                                    @if (currentStep == 6)
-                                    {
-                                        <button type="submit" name="action" value="Submit" class="btn btn-success btn-lg">
-                                            <i class="fa fa-check"></i> Complete Enrollment
-                                        </button>
-                                    }
-
-                                    <a href="@Url.Action("Index")" class="btn btn-link">Cancel</a>
+                <div class="row g-3 mb-4">
+                    <!-- Basic Info summary -->
+                    <div class="col-md-6">
+                        <div class="review-card">
+                            <div class="review-card-header">
+                                <span><i class="fa-solid fa-user"></i> Basic Information</span>
+                                <a href="@Url.Action("Wizard", new { step = 1 })" class="btn btn-sm btn-default">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </a>
+                            </div>
+                            <div class="review-card-body">
+                                <div class="review-row">
+                                    <span class="review-label">Customer Code</span>
+                                    <span class="customer-code">@Model.CustomerCode</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Full Name</span>
+                                    <span>@Model.FirstName @Model.LastName</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Email</span>
+                                    <span>@Model.Email</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Phone</span>
+                                    <span>@Model.Phone</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Customer Type</span>
+                                    <span class="badge badge-info">@Model.CustomerType</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Date of Birth</span>
+                                    <span>@(Model.DateOfBirth?.ToString("MMMM dd, yyyy") ?? "Not provided")</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Gender</span>
+                                    <span>@(string.IsNullOrWhiteSpace(Model.Gender) ? "Not specified" : Model.Gender)</span>
+                                </div>
+                                <div class="review-row" style="border-bottom:none;">
+                                    <span class="review-label">Identity</span>
+                                    <span>
+                                        @if (Model.IDType == "ID")
+                                        {
+                                            <span class="badge badge-default"><i class="fa-solid fa-lock"></i> SA ID — Encrypted</span>
+                                        }
+                                        else if (Model.IDType == "Passport")
+                                        {
+                                            <span class="badge badge-default"><i class="fa-solid fa-lock"></i> Passport — Encrypted</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not provided</span>
+                                        }
+                                    </span>
                                 </div>
                             </div>
-                        }
+                        </div>
                     </div>
-                    @section Scripts {
-                        @Scripts.Render("~/bundles/jqueryval")
 
-                        <script>
-                                $(document).ready(function () {
-                                // Enable client-side validation
-                                $.validator.unobtrusive.parse('form');
+                    <!-- Address summary -->
+                    <div class="col-md-6">
+                        <div class="review-card">
+                            <div class="review-card-header">
+                                <span><i class="fa-solid fa-location-dot"></i> Address Details</span>
+                                <a href="@Url.Action("Wizard", new { step = 2 })" class="btn btn-sm btn-default">
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                                </a>
+                            </div>
+                            <div class="review-card-body">
+                                <div class="review-row">
+                                    <span class="review-label">Street</span>
+                                    <span>@Model.Address</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">City</span>
+                                    <span>@Model.City</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Province</span>
+                                    <span>@Model.Province</span>
+                                </div>
+                                <div class="review-row">
+                                    <span class="review-label">Postal Code</span>
+                                    <span class="customer-code">@Model.PostalCode</span>
+                                </div>
+                                <div class="review-row" style="border-bottom:none;">
+                                    <span class="review-label">Country</span>
+                                    <span>South Africa</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                // Custom validation for South African phone numbers
-                                $.validator.addMethod("saphone", function (value, element) {
-                                    return this.optional(element) || /^0[0-9]{9}$/.test(value);
-                                }, "Please enter a valid South African phone number (10 digits starting with 0)");
+                <!-- Pending steps notice -->
+                <div class="pending-steps-notice">
+                    <div class="pending-steps-icon"><i class="fa-solid fa-clock"></i></div>
+                    <div>
+                        <strong>Steps available after profile creation:</strong>
+                        <div class="pending-badges mt-1">
+                            <span class="badge badge-default"><i class="fa-solid fa-id-card"></i> Supporting Documents</span>
+                            <span class="badge badge-default"><i class="fa-solid fa-credit-card"></i> Payment Methods</span>
+                            <span class="badge badge-default"><i class="fa-solid fa-shield-halved"></i> Medical Clearance</span>
+                        </div>
+                    </div>
+                </div>
+            }
 
-                                // Custom validation for postal code
-                                $.validator.addMethod("sapostal", function (value, element) {
-                                    return this.optional(element) || /^[0-9]{4}$/.test(value);
-                                }, "Please enter a valid 4-digit postal code");
-
-                                // Add validation rules
-                                $("#Phone").rules("add", {
-                                    saphone: true
-                                });
-
-                                $("#PostalCode").rules("add", {
-                                    sapostal: true
-                                });
-
-                                // Prevent form submission if validation fails
-                                    $('form').submit(function (e) {
-                                        var action = $(document.activeElement).val(); // Get which button was clicked
-
-                                        // Skip validation for Previous button
-                                        if (action === 'Previous') {
-                                            return true; // Allow submission
-                                        }
-
-                                        // For Next and Submit buttons, validate
-                                        if (!$(this).valid()) {
-                                            e.preventDefault();
-
-                                            // Scroll to first error
-                                            var firstError = $('.field-validation-error:first');
-                                            if (firstError.length > 0) {
-                                                $('html, body').animate({
-                                                    scrollTop: firstError.closest('.form-group').offset().top - 100
-                                                }, 500);
-                                            }
-
-                                            // Show error alert
-                                            if ($('.validation-summary-errors').length === 0) {
-                                                var errorHtml = '<div class="alert alert-danger alert-dismissible validation-summary-errors">' +
-                                                    '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
-                                                    '<strong>Validation Error!</strong> Please correct the errors below before continuing.' +
-                                                    '</div>';
-                                                $('form').prepend(errorHtml);
-                                            }
-
-                                            return false;
-                                        }
-
-                                        return true; // Allow submission if validation passed
-                                    });
-
-                                // Real-time validation feedback
-                                $('input, select').on('blur', function () {
-                                    $(this).valid();
-                                });
-
-                                // Auto-hide validation summary on input
-                                $('input, select').on('input change', function () {
-                                    $('.validation-summary-errors').fadeOut();
-                                });
-                            });</script>
+            <!-- ── Navigation Buttons ── -->
+            <div class="wizard-nav mt-4">
+                <div class="wizard-nav-left">
+                    @if (currentStep > 1)
+                    {
+                        <button type="submit" name="action" value="Previous" class="btn btn-default" formnovalidate="formnovalidate">
+                            <i class="fa-solid fa-arrow-left"></i> Previous
+                        </button>
+                    }
+                </div>
+                <div class="wizard-nav-right">
+                    @if (currentStep < totalSteps)
+                    {
+                        <button type="submit" name="action" value="Next" class="btn btn-primary" id="btnNext">
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    }
+                    @if (currentStep == totalSteps)
+                    {
+                        <button type="submit" name="action" value="Submit" class="btn btn-success" id="btnSubmit">
+                            <i class="fa-solid fa-circle-check"></i> Complete Enrollment
+                        </button>
                     }
                 </div>
             </div>
-        </div>
+        }
     </div>
 </div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <style>
+        /* ── Wizard Track ── */
+        .wizard-track {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 20px;
+        }
+
+        .wizard-line {
+            position: absolute;
+            top: 19px;
+            left: 40px;
+            right: 40px;
+            height: 2px;
+            background: var(--color-border);
+            z-index: 0;
+        }
+
+        .wz-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+            gap: 8px;
+        }
+
+        .wz-bubble {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .wz-label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--color-muted);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* Active step */
+        .wz-active .wz-bubble {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(4, 119, 191, 0.15);
+        }
+
+        .wz-active .wz-label {
+            color: var(--color-primary);
+            font-weight: 700;
+        }
+
+        /* Completed step */
+        .wz-completed .wz-bubble {
+            background: var(--color-success);
+            border-color: var(--color-success);
+            color: #fff;
+        }
+
+        .wz-completed .wz-label {
+            color: var(--color-success);
+        }
+
+        /* Progress bar under card header */
+        .wz-progress-bar-wrap {
+            height: 3px;
+            background: var(--color-border);
+        }
+
+        .wz-progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+            transition: width 0.4s var(--ease-out);
+        }
+
+        .wz-progress-text {
+            font-size: 0.775rem;
+            font-weight: 600;
+            color: var(--color-muted);
+        }
+
+        /* ── Customer Code Display ── */
+        .customer-code-display {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--color-primary-light);
+            border: 1.5px solid rgba(4, 119, 191, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 10px 16px;
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        /* ── Input with icon ── */
+        .input-icon-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .form-control.has-icon {
+            padding-left: 36px !important;
+        }
+
+        /* ── Identity section header ── */
+        .id-section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: var(--color-text);
+        }
+
+        .id-section-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--color-success);
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: var(--radius-pill);
+            padding: 2px 10px;
+        }
+
+        /* ── Placeholder step (steps 3, 4, 5) ── */
+        .placeholder-step {
+            text-align: center;
+            padding: 32px 20px;
+            color: var(--color-muted);
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            color: var(--color-primary);
+            opacity: 0.18;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .placeholder-step h5 {
+            color: var(--color-text);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .placeholder-step p {
+            font-size: 0.875rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ── Doc / feature type cards ── */
+        .doc-type-card {
+            background: var(--color-bg);
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: 16px 12px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--color-text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .doc-type-card i {
+                font-size: 1.4rem;
+                color: var(--color-primary);
+                opacity: 0.7;
+            }
+
+        /* ── Review cards ── */
+        .review-card {
+            background: var(--color-surface);
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .review-card-header {
+            background: linear-gradient(135deg, var(--color-primary-light), rgba(4,196,217,0.06));
+            border-bottom: 1.5px solid var(--color-border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--color-primary);
+        }
+
+        .review-card-body {
+            padding: 4px 0;
+        }
+
+        .review-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 16px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.855rem;
+            gap: 12px;
+        }
+
+        .review-label {
+            font-weight: 600;
+            color: var(--color-muted);
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            min-width: 110px;
+        }
+
+        /* ── Pending steps notice ── */
+        .pending-steps-notice {
+            background: var(--color-bg);
+            border: 1.5px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            font-size: 0.875rem;
+        }
+
+        .pending-steps-icon {
+            font-size: 1.3rem;
+            color: var(--color-warning);
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+
+        .pending-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Navigation ── */
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .wizard-nav-left, .wizard-nav-right {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+
+    <script>
+    $(document).ready(function () {
+        $.validator.unobtrusive.parse('#wizardForm');
+
+        var currentStep = @currentStep;
+
+        // ── Custom validators ──
+        $.validator.addMethod("saphone", function (value, element) {
+            return this.optional(element) || /^0[0-9]{9}$/.test(value);
+        }, "Please enter a valid SA phone number (10 digits starting with 0)");
+
+        $.validator.addMethod("sapostal", function (value, element) {
+            return this.optional(element) || /^[0-9]{4}$/.test(value);
+        }, "Please enter a valid 4-digit postal code");
+
+        $.validator.addMethod("minAge", function (value, element, min) {
+            if (!value) return false;
+            var dob    = new Date(value);
+            var cutoff = new Date();
+            cutoff.setFullYear(cutoff.getFullYear() - min);
+            return dob <= cutoff;
+        }, "Customer must be at least 16 years old");
+
+        $.validator.methods.email = function (value, element) {
+            return this.optional(element) ||
+            /^[^\s@@]+@@[^\s@@]+\.[^\s@@]{2,}$/.test(value);
+        };
+
+        // ── Step 1: ID type toggle ──────────────────────────────────────────
+        if (currentStep === 1) {
+            // Show the right section based on current model value (returning from error)
+            var initialType = $('#idTypeSelect').val();
+            showIdSection(initialType);
+
+            $('#idTypeSelect').on('change', function () {
+                showIdSection($(this).val());
+            });
+        }
+
+        function showIdSection(type) {
+            $('#saIdSection').hide();
+            $('#passportSection').hide();
+            $('#idNumberInput').removeAttr('required');
+            $('#passportInput').removeAttr('required');
+
+            if (type === 'ID') {
+                $('#saIdSection').show();
+            } else if (type === 'Passport') {
+                $('#passportSection').show();
+            }
+        }
+
+        // ── Attach extra rules per step ──
+        if (currentStep === 1) {
+            if ($("#Phone").length) {
+                $("#Phone").rules("add", { saphone: true });
+            }
+            if ($("#DateOfBirth").length) {
+                $("#DateOfBirth").rules("add", {
+                    required: true,
+                    minAge: 16
+                });
+            }
+        }
+
+        if (currentStep === 2) {
+            if ($("#PostalCode").length) {
+                $("#PostalCode").rules("add", { sapostal: true });
+            }
+        }
+
+        // ── Real-time feedback on blur ──
+        $('input, select').on('blur', function () {
+            $(this).valid();
+        });
+
+        // ── Form submit guard ──
+        $('#wizardForm').on('submit', function (e) {
+            var action = $(document.activeElement).val();
+
+            if (action === 'Previous') return true;
+
+            if (currentStep === 3 || currentStep === 4 || currentStep === 5) return true;
+
+            var $fieldsOnStep = getStepFields(currentStep);
+            var isValid = true;
+
+            $fieldsOnStep.each(function () {
+                if (!$(this).valid()) {
+                    isValid = false;
+                }
+            });
+
+            // Step 1 extra: validate identity number
+            if (currentStep === 1 && action !== 'Previous') {
+                var idType = $('#idTypeSelect').val();
+
+                if (!idType) {
+                    isValid = false;
+                    // Trigger validation message on the dropdown
+                    $('#idTypeSelect').addClass('input-validation-error');
+                } else if (idType === 'ID') {
+                    var idVal = $('#idNumberInput').val().trim();
+                    var birthDate = $("#DateOfBirth").val().trim();
+                    var dobParts = birthDate.split('-');
+                    var dobYYMMDD = dobParts[0].slice(-2) + dobParts[1] + dobParts[2];
+                    if (!idVal) {
+                        isValid = false;
+                        showStepError('SA ID number is required.');
+                    } else if (!/^[0-9]{13}$/.test(idVal)) {
+                        isValid = false;
+                        showStepError('SA ID number must be exactly 13 digits.');
+                    } else if (idVal.slice(0, 6) !== dobYYMMDD) {
+                        isValid = false
+                        showStepError('ID number and selected date of birth do not correlate')
+                    }
+                } else if (idType === 'Passport') {
+                    var ppVal = $('#passportInput').val().trim();
+                    if (!ppVal) {
+                        isValid = false;
+                        showStepError('Passport number is required.');
+                    }
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                var $first = $('.field-validation-error:visible').first();
+                if ($first.length) {
+                    $('html, body').animate({
+                        scrollTop: $first.closest('.form-group').offset().top - 120
+                    }, 350);
+                }
+                return false;
+            }
+
+            return true;
+        });
+
+        function showStepError(msg) {
+            var existing = $('#stepIdentityError');
+            if (existing.length) existing.remove();
+            var el = $('<div id="stepIdentityError" class="alert alert-danger mt-2">')
+                .text(msg);
+            $('#saIdSection:visible, #passportSection:visible').append(el);
+        }
+
+        // ── Only validate fields for the current step ──
+        function getStepFields(step) {
+            if (step === 1) {
+                return $('#FirstName, #LastName, #Email, #Phone, #CustomerType, #DateOfBirth, #idTypeSelect');
+            }
+            if (step === 2) {
+                return $('#Address, #City, #PostalCode, #Province');
+            }
+            return $([]);
+        }
+
+        // ── Input sanitisers ──
+        $('#Phone').on('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        });
+        $('#PostalCode').on('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4);
+        });
+        $('#FirstName, #LastName').on('input', function () {
+            this.value = this.value.replace(/[^a-zA-Z\s'\-]/g, '');
+        });
+        $('#idNumberInput').on('input', function () {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 13);
+        });
+
+        // ── Clear summary on field change ──
+        $('input, select').on('input change', function () {
+            $('.alert-danger').fadeOut(200);
+        });
+    });
+    </script>
+}

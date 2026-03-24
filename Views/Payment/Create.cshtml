@@ -1,0 +1,774 @@
+﻿@model TechSolutions.Models.PaymentInformation
+
+@{
+    ViewBag.Title = "Add Payment Method";
+    var customer = ViewBag.Customer as TechSolutions.Models.Customer;
+}
+
+<!-- Toast Notifications -->
+@if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+{
+    <div id="toastContainer" style="position:fixed;top:80px;right:20px;z-index:9999;min-width:340px;max-width:480px;">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="app-toast alert alert-success" role="alert">
+                <strong><i class="fa-solid fa-circle-check"></i> Success</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["SuccessMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="app-toast app-toast-error alert alert-danger" role="alert">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Error</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["ErrorMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+    </div>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-plus"></i> Add Payment Method</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            @customer.FullName &mdash; <span class="customer-code">@customer.CustomerCode</span>
+        </span>
+    </div>
+    <a href="@Url.Action("Index", new { customerId = customer.CustomerID })" class="btn btn-default">
+        <i class="fa-solid fa-arrow-left"></i> Back to Payments
+    </a>
+</div>
+
+<!-- Security Notice -->
+<div class="alert alert-danger mb-4" style="border-left-width:4px;">
+    <i class="fa-solid fa-lock"></i>
+    <strong>Sensitive Financial Data.</strong>
+    Card and account numbers are encrypted with AES-256 before storage. Only the last 4 digits are retained for display.
+</div>
+
+<!-- Form Card -->
+<div class="content-card">
+    <div class="content-card-header">
+        <h4 class="mb-0"><i class="fa-solid fa-credit-card"></i> Payment Method Details</h4>
+    </div>
+    <div class="content-card-body">
+
+        @using (Html.BeginForm("Create", "Payment", FormMethod.Post, new { id = "paymentForm", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.CustomerID)
+
+            if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mb-4">
+                    <strong><i class="fa-solid fa-triangle-exclamation"></i> Please fix the following errors:</strong>
+                    @Html.ValidationSummary(false, "", new { @class = "mb-0 mt-2" })
+                </div>
+            }
+
+            <!-- ── Section: Payment Type ── -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-credit-card"></i> Payment Method Type
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PaymentMethodType, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.PaymentMethodType,
+                                (SelectList)ViewBag.PaymentTypes,
+                                "Select payment type…",
+                                new { @class = "form-control", id = "paymentTypeSelect" })
+                            @Html.ValidationMessageFor(m => m.PaymentMethodType, "", new { @class = "field-validation-error" })
+                            <span class="help-block">Select a type to reveal the relevant fields</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Type prompt -->
+                <div id="typePrompt" class="doc-type-prompt">
+                    <i class="fa-solid fa-arrow-up"></i>
+                    Select a payment type above to continue
+                </div>
+            </div>
+
+            <!-- ── Section: Card Information ── -->
+            <div id="cardSection" class="form-section" style="display:none;">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-credit-card"></i> Card Information
+                    <span class="ms-2" style="font-size:0.75rem;font-weight:500;color:var(--color-danger);text-transform:none;letter-spacing:0;">
+                        <i class="fa-solid fa-lock"></i> AES-256 Encrypted
+                    </span>
+                </div>
+
+                <div class="alert alert-warning mb-3" style="border-left-width:4px;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <strong>Security:</strong> Card details are encrypted before storage. Only authorised staff can retrieve full card numbers.
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CardType, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.CardType,
+                                (SelectList)ViewBag.CardTypes,
+                                "Select card type…",
+                                new { @class = "form-control", id = "cardTypeSelect" })
+                            @Html.ValidationMessageFor(m => m.CardType, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CardHolderName, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                @Html.TextBoxFor(m => m.CardHolderName, new
+                                {
+                                    @class = "form-control has-icon",
+                                    placeholder = "Name as it appears on card",
+                                    autocomplete = "off"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CardHolderName, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="form-group">
+                            <label class="control-label">
+                                Full Card Number <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-lock input-icon" style="color:var(--color-danger);"></i>
+                                <input type="text" name="FullCardNumber" id="fullCardNumber"
+                                       class="form-control has-icon card-number-input"
+                                       placeholder="1234 5678 9012 3456"
+                                       maxlength="19"
+                                       autocomplete="off"
+                                       inputmode="numeric" />
+                            </div>
+                            <span class="help-block">Encrypted — format: 16 digits</span>
+                            <span class="field-validation-error" id="cardNumberError" style="display:none;"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">
+                                CVV <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-lock input-icon" style="color:var(--color-danger);"></i>
+                                <input type="password" name="CVV" id="cvv"
+                                       class="form-control has-icon"
+                                       placeholder="3–4 digits"
+                                       maxlength="4"
+                                       autocomplete="off"
+                                       inputmode="numeric" />
+                            </div>
+                            <span class="help-block">Never displayed after entry</span>
+                            <span class="field-validation-error" id="cvvError" style="display:none;"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CardExpiryDate, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-regular fa-calendar input-icon"></i>
+                                @Html.TextBoxFor(m => m.CardExpiryDate, "{0:yyyy-MM-dd}", new
+                                {
+                                    @class = "form-control has-icon",
+                                    type = "date",
+                                    id = "CardExpiryDate"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CardExpiryDate, "", new { @class = "field-validation-error" })
+                            <span class="field-validation-error" id="expiryError" style="display:none;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live card preview -->
+                <div class="card-preview mt-3" id="cardPreview">
+                    <div class="card-preview-number" id="previewNumber">•••• •••• •••• ••••</div>
+                    <div class="card-preview-bottom">
+                        <div>
+                            <div class="card-preview-label">Card Holder</div>
+                            <div class="card-preview-value" id="previewHolder">YOUR NAME</div>
+                        </div>
+                        <div>
+                            <div class="card-preview-label">Expires</div>
+                            <div class="card-preview-value" id="previewExpiry">MM/YY</div>
+                        </div>
+                        <div id="previewBrandWrap" style="align-self:flex-end;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Bank Account ── -->
+            <div id="bankSection" class="form-section" style="display:none;">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-building-columns"></i> Bank Account Information
+                    <span class="ms-2" style="font-size:0.75rem;font-weight:500;color:var(--color-danger);text-transform:none;letter-spacing:0;">
+                        <i class="fa-solid fa-lock"></i> Encrypted
+                    </span>
+                </div>
+
+                <div class="alert alert-info mb-3" style="border-left-width:4px;">
+                    <i class="fa-solid fa-lock"></i>
+                    <strong>Security:</strong> Your full account number will be encrypted. Only the last 4 digits are stored for display.
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BankName, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.BankName,
+                                (SelectList)ViewBag.BankNames,
+                                "Select bank…",
+                                new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.BankName, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.AccountType, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.AccountType,
+                                (SelectList)ViewBag.AccountTypes,
+                                "Select account type…",
+                                new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.AccountType, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="form-group">
+                            <label class="control-label">
+                                Full Account Number <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-lock input-icon" style="color:var(--color-danger);"></i>
+                                <input type="text" name="FullAccountNumber" id="fullAccountNumber"
+                                       class="form-control has-icon"
+                                       placeholder="Enter full account number"
+                                       maxlength="20"
+                                       autocomplete="off"
+                                       inputmode="numeric" />
+                            </div>
+                            <span class="help-block">Encrypted — only last 4 digits retained for display</span>
+                            <span class="field-validation-error" id="accountError" style="display:none;"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BranchCode, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-code-branch input-icon"></i>
+                                @Html.TextBoxFor(m => m.BranchCode, new
+                                {
+                                    @class = "form-control has-icon",
+                                    placeholder = "6-digit code",
+                                    maxlength = "6",
+                                    inputmode = "numeric"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.BranchCode, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Billing Address ── -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-location-dot"></i> Billing Address
+                    <span class="ms-2" style="font-size:0.75rem;font-weight:500;color:var(--color-muted);text-transform:none;letter-spacing:0;">Optional</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BillingAddress, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-location-dot input-icon"></i>
+                                @Html.TextBoxFor(m => m.BillingAddress, new { @class = "form-control has-icon", placeholder = "Street address" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.BillingAddress, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BillingSuburb, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.BillingSuburb, new { @class = "form-control", placeholder = "e.g., Sandton" })
+                            @Html.ValidationMessageFor(m => m.BillingSuburb, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BillingCity, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.BillingCity, new { @class = "form-control", placeholder = "e.g., Johannesburg" })
+                            @Html.ValidationMessageFor(m => m.BillingCity, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.BillingPostalCode, new { @class = "control-label" })
+                            @Html.TextBoxFor(m => m.BillingPostalCode, new { @class = "form-control", placeholder = "4-digit code", maxlength = "4", inputmode = "numeric" })
+                            @Html.ValidationMessageFor(m => m.BillingPostalCode, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Status ── -->
+            <div class="form-section" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-sliders"></i> Settings
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">Primary Method</label>
+                            <div class="status-toggle-wrap">
+                                <label class="status-toggle-label" for="IsPrimary">
+                                    @Html.CheckBoxFor(m => m.IsPrimary, new { @class = "status-toggle-input", id = "IsPrimary" })
+                                    <span class="status-toggle-track">
+                                        <span class="status-toggle-thumb"></span>
+                                    </span>
+                                    <span class="status-toggle-text" id="primaryText">Not Primary</span>
+                                </label>
+                            </div>
+                            <span class="help-block">Set as the default payment method</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">Status</label>
+                            <div class="status-toggle-wrap">
+                                <label class="status-toggle-label" for="IsActive">
+                                    @Html.CheckBoxFor(m => m.IsActive, new { @class = "status-toggle-input", id = "IsActive" })
+                                    <span class="status-toggle-track">
+                                        <span class="status-toggle-thumb"></span>
+                                    </span>
+                                    <span class="status-toggle-text" id="activeText">Inactive</span>
+                                </label>
+                            </div>
+                            <span class="help-block">Inactive methods cannot be used for payments</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Action Buttons ── -->
+            <div class="form-actions">
+                <a href="@Url.Action("Index", new { customerId = customer.CustomerID })" class="btn btn-default btn-lg">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Payment Method
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <style>
+        /* ── Shared ── */
+        .input-icon-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .form-control.has-icon {
+            padding-left: 36px !important;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .form-section-header {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .doc-type-prompt {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: var(--color-bg);
+            border: 1.5px dashed var(--color-border);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            color: var(--color-muted);
+            font-style: italic;
+        }
+
+        /* Status toggle */
+        .status-toggle-wrap {
+            display: flex;
+            align-items: center;
+            padding: 9px 0;
+        }
+
+        .status-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .status-toggle-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .status-toggle-track {
+            width: 44px;
+            height: 24px;
+            background: var(--color-border);
+            border-radius: var(--radius-pill);
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .status-toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .status-toggle-input:checked ~ .status-toggle-track {
+            background: var(--color-success);
+        }
+
+            .status-toggle-input:checked ~ .status-toggle-track .status-toggle-thumb {
+                transform: translateX(20px);
+            }
+
+        .status-toggle-text {
+            font-size: 0.875rem;
+            color: var(--color-text);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 24px;
+            margin-top: 24px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .customer-code {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+        }
+
+        /* ── Card preview ── */
+        .card-preview {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            color: #fff;
+            max-width: 380px;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+        }
+
+        .card-preview-number {
+            font-family: var(--font-mono);
+            font-size: 1.3rem;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .card-preview-bottom {
+            display: flex;
+            align-items: flex-end;
+            gap: 24px;
+        }
+
+        .card-preview-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            opacity: 0.6;
+            margin-bottom: 2px;
+        }
+
+        .card-preview-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Toast */
+        .app-toast {
+            margin-bottom: 10px;
+            position: relative;
+        }
+    </style>
+
+    <script>
+        // ── Show / hide sections on type change ──
+        document.getElementById('paymentTypeSelect').addEventListener('change', function () {
+            var type = this.value;
+            var cardSec = document.getElementById('cardSection');
+            var bankSec = document.getElementById('bankSection');
+            var typePrompt = document.getElementById('typePrompt');
+
+            cardSec.style.display = 'none';
+            bankSec.style.display = 'none';
+            typePrompt.style.display = 'flex';
+
+            // Clear sensitive fields when switching
+            document.getElementById('fullCardNumber').value = '';
+            document.getElementById('cvv').value = '';
+            document.getElementById('fullAccountNumber').value = '';
+
+            if (type === 'Credit Card' || type === 'Debit Card') {
+                cardSec.style.display = 'block';
+                typePrompt.style.display = 'none';
+            } else if (type === 'Bank Account') {
+                bankSec.style.display = 'block';
+                typePrompt.style.display = 'none';
+            }
+        });
+
+        // ── Card number: format with spaces + Luhn ──
+        document.getElementById('fullCardNumber').addEventListener('input', function () {
+            var raw = this.value.replace(/\D/g, '').slice(0, 16);
+            var formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+            this.value = formatted;
+
+            // Update preview
+            var display = raw.length > 0
+                ? (raw + '################').slice(0, 16).replace(/\d(?=.{5})/g, '•').match(/.{1,4}/g).join(' ')
+                : '•••• •••• •••• ••••';
+            document.getElementById('previewNumber').textContent = formatted.length > 0
+                ? formatted.padEnd(19, '•').replace(/\d(?=[\d ]{5})/g, '•')
+                : '•••• •••• •••• ••••';
+
+            // Simpler readable preview
+            if (raw.length > 0) {
+                var masked = raw.slice(0, 4) + (raw.length > 4 ? ' •••• •••• ' + raw.slice(-4).padStart(4, '•') : '');
+                document.getElementById('previewNumber').textContent = formatted;
+            } else {
+                document.getElementById('previewNumber').textContent = '•••• •••• •••• ••••';
+            }
+
+            // Luhn validation feedback
+            var err = document.getElementById('cardNumberError');
+            if (raw.length === 16) {
+                if (!luhn(raw)) {
+                    err.textContent = 'This card number is invalid.';
+                    err.style.display = 'block';
+                } else {
+                    err.style.display = 'none';
+                }
+            } else {
+                err.style.display = 'none';
+            }
+        });
+
+        // ── Card holder name → preview ──
+        document.querySelector('input[name="CardHolderName"]').addEventListener('input', function () {
+            document.getElementById('previewHolder').textContent = this.value.toUpperCase() || 'YOUR NAME';
+        });
+
+        // ── Expiry date → preview ──
+        document.getElementById('CardExpiryDate').addEventListener('change', function () {
+            var val = this.value;
+            if (val) {
+                var parts = val.split('-');
+                document.getElementById('previewExpiry').textContent = parts[1] + '/' + parts[0].slice(2);
+            } else {
+                document.getElementById('previewExpiry').textContent = 'MM/YY';
+            }
+            // Validate not in past
+            var err = document.getElementById('expiryError');
+            if (val && new Date(val) < new Date()) {
+                err.textContent = 'Expiry date cannot be in the past.';
+                err.style.display = 'block';
+            } else {
+                err.style.display = 'none';
+            }
+        });
+
+        // ── Card type → update preview gradient ──
+        document.getElementById('cardTypeSelect') && document.getElementById('cardTypeSelect').addEventListener('change', function () {
+            var preview = document.querySelector('.card-preview');
+            var brandWrap = document.getElementById('previewBrandWrap');
+            if (this.value === 'Visa') {
+                preview.style.background = 'linear-gradient(135deg, #1434CB 0%, #0a1e6e 100%)';
+                brandWrap.innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" style="height:22px;filter:brightness(0) invert(1);opacity:0.85;">';
+            } else if (this.value === 'Mastercard') {
+                preview.style.background = 'linear-gradient(135deg, #EB001B 0%, #c41515 100%)';
+                brandWrap.innerHTML = '<img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" style="height:24px;filter:brightness(0) invert(1);opacity:0.85;">';
+            } else {
+                preview.style.background = 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)';
+                brandWrap.innerHTML = '';
+            }
+        });
+
+        // ── CVV validation ──
+        document.getElementById('cvv').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 4);
+            var err = document.getElementById('cvvError');
+            if (this.value.length > 0 && !/^\d{3,4}$/.test(this.value)) {
+                err.textContent = 'CVV must be 3 or 4 digits.';
+                err.style.display = 'block';
+            } else {
+                err.style.display = 'none';
+            }
+        });
+
+        // ── Account number: digits only ──
+        document.getElementById('fullAccountNumber').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 20);
+            var err = document.getElementById('accountError');
+            if (this.value.length > 0 && this.value.length < 8) {
+                err.textContent = 'Account number must be at least 8 digits.';
+                err.style.display = 'block';
+            } else {
+                err.style.display = 'none';
+            }
+        });
+
+        // ── Branch code: digits only ──
+        var branchInput = document.querySelector('input[name="BranchCode"]');
+        if (branchInput) {
+            branchInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 6);
+            });
+        }
+
+        // ── Billing postal: digits only ──
+        var postalInput = document.querySelector('input[name="BillingPostalCode"]');
+        if (postalInput) {
+            postalInput.addEventListener('input', function () {
+                this.value = this.value.replace(/\D/g, '').slice(0, 4);
+            });
+        }
+
+        // ── Luhn algorithm ──
+        function luhn(num) {
+            var sum = 0, alt = false;
+            for (var i = num.length - 1; i >= 0; i--) {
+                var n = parseInt(num[i]);
+                if (alt) { n *= 2; if (n > 9) n -= 9; }
+                sum += n;
+                alt = !alt;
+            }
+            return sum % 10 === 0;
+        }
+
+        // ── Toggle labels ──
+        document.getElementById('IsPrimary').addEventListener('change', function () {
+            document.getElementById('primaryText').textContent = this.checked ? 'Primary' : 'Not Primary';
+        });
+        document.getElementById('IsActive').addEventListener('change', function () {
+            document.getElementById('activeText').textContent = this.checked ? 'Active' : 'Inactive';
+        });
+
+        // Set initial toggle label state
+        document.getElementById('activeText').textContent =
+            document.getElementById('IsActive').checked ? 'Active' : 'Inactive';
+
+        // ── Form submission guard ──
+        document.getElementById('paymentForm').addEventListener('submit', function (e) {
+            var type = document.getElementById('paymentTypeSelect').value;
+            if (!type) {
+                e.preventDefault();
+                showFormError('Please select a payment method type.');
+                return;
+            }
+
+            if (type === 'Credit Card' || type === 'Debit Card') {
+                var cardRaw = document.getElementById('fullCardNumber').value.replace(/\s/g, '');
+                if (!cardRaw) { e.preventDefault(); showFormError('Please enter the card number.'); return; }
+                if (!luhn(cardRaw)) { e.preventDefault(); showFormError('The card number entered is invalid.'); return; }
+                var cvv = document.getElementById('cvv').value;
+                if (!cvv || !/^\d{3,4}$/.test(cvv)) { e.preventDefault(); showFormError('Please enter a valid CVV (3–4 digits).'); return; }
+                var expiry = document.getElementById('CardExpiryDate').value;
+                if (expiry && new Date(expiry) < new Date()) { e.preventDefault(); showFormError('The card expiry date cannot be in the past.'); return; }
+            }
+
+            if (type === 'Bank Account') {
+                var acc = document.getElementById('fullAccountNumber').value;
+                if (!acc || acc.length < 8) { e.preventDefault(); showFormError('Please enter a valid account number (minimum 8 digits).'); return; }
+            }
+        });
+
+        function showFormError(msg) {
+            var existing = document.getElementById('jsFormError');
+            if (existing) existing.remove();
+            var el = document.createElement('div');
+            el.id = 'jsFormError';
+            el.className = 'alert alert-danger mb-3';
+            el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + msg;
+            document.getElementById('paymentForm').prepend(el);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ── Toast dismiss ──
+        setTimeout(function () {
+            document.querySelectorAll('.app-toast:not(.app-toast-error)').forEach(function (el) {
+                el.style.transition = 'all 0.35s ease-in';
+                el.style.opacity = '0'; el.style.transform = 'translateX(120%)';
+                setTimeout(function () { el.remove(); }, 350);
+            });
+        }, 5000);
+
+        document.querySelectorAll('.app-toast-close').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var t = this.closest('.app-toast');
+                t.style.transition = 'all 0.3s ease-in'; t.style.opacity = '0'; t.style.transform = 'translateX(120%)';
+                setTimeout(function () { t.remove(); }, 300);
+            });
+        });
+    </script>
+}

@@ -1,89 +1,375 @@
 ﻿@model TechSolutions.Models.IndexViewModel
+@using System.Security.Claims
+
 @{
-    ViewBag.Title = "Manage";
+    ViewBag.Title = "Account Settings";
+
+    var identity = (ClaimsIdentity)User.Identity;
+
+    string fullName = identity.FindFirst("FullName")?.Value;
+    if (string.IsNullOrWhiteSpace(fullName)) { fullName = identity.FindFirst(ClaimTypes.Email)?.Value; }
+
+    if (string.IsNullOrWhiteSpace(fullName)) { fullName = User.Identity.Name ?? ""; }
+
+    string initials = "";
+    var parts = (fullName ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+    if (parts.Length >= 2) { initials = $"{parts[0][0]}{parts[parts.Length - 1][0]}"; }
+
+    else if (parts.Length == 1 && parts[0].Length > 0) { initials = parts[0][0].ToString(); }
 }
 
-<main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
-
-    <p class="text-success">@ViewBag.StatusMessage</p>
+<!-- Page Header -->
+<div class="page-header">
     <div>
-        <h4>Change your account settings</h4>
-        <hr />
-        <dl class="dl-horizontal">
-            <dt>Password:</dt>
-            <dd>
-                [
-                @if (Model.HasPassword)
-                {
-                    @Html.ActionLink("Change your password", "ChangePassword")
-                }
-                else
-                {
-                    @Html.ActionLink("Create", "SetPassword")
-                }
-                ]
-            </dd>
-            <dt>External Logins:</dt>
-            <dd>
-                @Model.Logins.Count [
-                @Html.ActionLink("Manage", "ManageLogins") ]
-            </dd>
-            @*
-                Phone Numbers can used as a second factor of verification in a two-factor authentication system.
-                
-                See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                    for details on setting up this ASP.NET application to support two-factor authentication using SMS.
-                
-                Uncomment the following block after you have set up two-factor authentication
-            *@
-            @*  
-                <dt>Phone Number:</dt>
-                <dd>
-                    @(Model.PhoneNumber ?? "None")
-                    @if (Model.PhoneNumber != null)
-                    {
-                        <br />
-                        <text>[&nbsp;&nbsp;@Html.ActionLink("Change", "AddPhoneNumber")&nbsp;&nbsp;]</text>
-                        using (Html.BeginForm("RemovePhoneNumber", "Manage", FormMethod.Post, new { role = "form" }))
-                        {
-                            @Html.AntiForgeryToken()
-                            <text>[<input type="submit" value="Remove" class="btn-link" />]</text>
-                        }
-                    }
-                    else
-                    {
-                        <text>[&nbsp;&nbsp;@Html.ActionLink("Add", "AddPhoneNumber")
-                    }
-                </dd>
-            *@
-            <dt>Two-Factor Authentication:</dt>
-            <dd>
-                <p>
-                    There are no two-factor authentication providers configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                    for details on setting up this ASP.NET application to support two-factor authentication.
-                </p>
-                @*@if (Model.TwoFactor)
-                    {
-                        using (Html.BeginForm("DisableTwoFactorAuthentication", "Manage", FormMethod.Post, new { role = "form" }))
-                        {
-                            @Html.AntiForgeryToken()
-                            <text>Enabled
-                            <input type="submit" value="Disable" class="btn btn-link" />
-                            </text>
-                        }
-                    }
-                    else
-                    {
-                        using (Html.BeginForm("EnableTwoFactorAuthentication", "Manage", FormMethod.Post, new { role = "form" }))
-                        {
-                            @Html.AntiForgeryToken()
-                            <text>Disabled
-                            <input type="submit" value="Enable" class="btn btn-link" />
-                            </text>
-                        }
-                    }*@
-            </dd>
-        </dl>
+        <h2><i class="fa-solid fa-user-gear"></i> Account Settings</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            Manage your profile, password and security preferences
+        </span>
     </div>
-</main>
+</div>
+
+<!-- Status Message -->
+@if (TempData["StatusMessage"] != null)
+{
+    <div class="alert alert-success mb-4" style="border-left-width:4px;">
+        <i class="fa-solid fa-circle-check"></i> @TempData["StatusMessage"]
+    </div>
+}
+
+<div class="row g-3">
+
+    <!-- ── Left: Profile Card ── -->
+    <div class="col-md-4">
+        <div class="content-card">
+            <div class="content-card-body" style="text-align:center;padding:32px 20px;">
+                <div class="manage-avatar">@initials</div>
+                <h5 class="manage-name">@fullName</h5>
+                <p class="manage-email">@User.Identity.Name</p>
+                <span class="badge badge-success mt-1">
+                    <i class="fa-solid fa-circle" style="font-size:0.5rem;"></i> Active Account
+                </span>
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="mt-2">
+                        <span class="badge badge-primary">
+                            <i class="fa-solid fa-shield-halved"></i> Administrator
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Right: Settings ── -->
+    <div class="col-md-8">
+
+        <!-- Password -->
+        <div class="content-card mb-3">
+            <div class="content-card-header">
+                <h4 class="mb-0"><i class="fa-solid fa-lock"></i> Password</h4>
+            </div>
+            <div class="content-card-body">
+                <div class="manage-setting-row">
+                    <div class="manage-setting-info">
+                        <strong>@(Model.HasPassword ? "Password set" : "No password set")</strong>
+                        <small>@(Model.HasPassword ? "Your account is secured with a password." : "Add a password to secure your account.")</small>
+                    </div>
+                    @if (Model.HasPassword)
+                    {
+                        <a href="@Url.Action("ChangePassword")" class="btn btn-default btn-sm">
+                            <i class="fa-solid fa-key"></i> Change Password
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("SetPassword")" class="btn btn-primary btn-sm">
+                            <i class="fa-solid fa-plus"></i> Create Password
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- External Logins -->
+        <div class="content-card mb-3">
+            <div class="content-card-header">
+                <h4 class="mb-0"><i class="fa-solid fa-link"></i> External Logins</h4>
+            </div>
+            <div class="content-card-body">
+                <div class="manage-setting-row">
+                    <div class="manage-setting-info">
+                        <strong>@Model.Logins.Count linked account@(Model.Logins.Count == 1 ? "" : "s")</strong>
+                        <small>External providers like Google or Microsoft linked to your account.</small>
+                    </div>
+                    <a href="@Url.Action("ManageLogins")" class="btn btn-default btn-sm">
+                        <i class="fa-solid fa-arrow-right"></i> Manage
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <!-- User Role Management -->
+            <div class="content-card mb-3">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-users-gear"></i> User Role Management</h4>
+                </div>
+                <div class="content-card-body">
+                    <div class="manage-setting-row">
+                        <div class="manage-setting-info">
+                            <strong>Manage user roles</strong>
+                            <small>View all users and assign or revoke their system roles.</small>
+                        </div>
+                        <a href="@Url.Action("UserRoles", "Manage")" class="btn btn-default btn-sm">
+                            <i class="fa-solid fa-arrow-right"></i> Manage
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demo Data Seeder -->
+            <div class="content-card mb-3">
+                <div class="content-card-header" style="border-bottom-color:rgba(212,142,16,0.3);">
+                    <h4 class="mb-0" style="color:var(--color-warning, #d48e10);">
+                        <i class="fa-solid fa-database"></i> Demo Data Seeder
+                    </h4>
+                </div>
+                <div class="content-card-body">
+                    <div class="manage-setting-row">
+                        <div class="manage-setting-info">
+                            <strong>Populate system with demo data</strong>
+                            <small>
+                                Generates up to 50 customers with enrollments, payment methods and
+                                medical clearances spread over the past 2 years. Safe to run on an
+                                empty database — will not add duplicates if 50 or more customers already exist.
+                            </small>
+                        </div>
+                        <button type="button" class="btn-seed"
+                                onclick="document.getElementById('seedModal').style.display='flex'">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Seed Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Two-Factor Authentication -->
+        <div class="content-card">
+            <div class="content-card-header">
+                <h4 class="mb-0"><i class="fa-solid fa-shield-halved"></i> Two-Factor Authentication</h4>
+            </div>
+            <div class="content-card-body">
+                <div class="alert alert-info mb-0" style="border-left-width:4px;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Two-factor authentication is not currently configured for this application.
+                    <a href="https://go.microsoft.com/fwlink/?LinkId=403804" target="_blank"
+                       style="color:var(--color-secondary);font-weight:600;">
+                        Learn more <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.7rem;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Seed Confirm Modal ── -->
+<div id="seedModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+    <div class="seed-modal-box">
+        <div class="seed-modal-header">
+            <h5><i class="fa-solid fa-triangle-exclamation"></i> Confirm Data Seed</h5>
+        </div>
+        <div class="seed-modal-body">
+            <p>This will generate up to <strong>50 demo customers</strong> including:</p>
+            <ul>
+                <li>Varied customer profiles with realistic South African data</li>
+                <li>1–2 course enrollments per customer</li>
+                <li>Payment methods for ~80% of customers</li>
+                <li>Medical clearances for ~70% of customers</li>
+            </ul>
+            <p class="seed-modal-note">
+                <i class="fa-solid fa-circle-info"></i>
+                If 50 or more customers already exist no data will be added.
+                This action is recorded in the audit trail.
+            </p>
+        </div>
+        <div class="seed-modal-footer">
+            <button type="button" class="btn btn-default"
+                    onclick="document.getElementById('seedModal').style.display='none'">
+                Cancel
+            </button>
+            @using (Html.BeginForm("SeedData", "Manage", FormMethod.Post, new { style = "display:inline;" }))
+            {
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-seed-confirm">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Yes, Generate Data
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <style>
+        .manage-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 auto 14px;
+            letter-spacing: -1px;
+        }
+
+        .manage-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin: 0 0 4px;
+        }
+
+        .manage-email {
+            font-size: 0.825rem;
+            color: var(--color-muted);
+            margin: 0;
+            word-break: break-all;
+        }
+
+        .manage-setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .manage-setting-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+        }
+
+            .manage-setting-info strong {
+                font-size: 0.875rem;
+                color: var(--color-text);
+            }
+
+            .manage-setting-info small {
+                font-size: 0.8rem;
+                color: var(--color-muted);
+            }
+
+        /* Seed button */
+        .btn-seed {
+            background: rgba(212,142,16,0.12);
+            color: #d48e10;
+            border: 1.5px solid rgba(212,142,16,0.3);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition, all 0.2s ease);
+            white-space: nowrap;
+        }
+
+            .btn-seed:hover {
+                background: #d48e10;
+                color: #fff;
+            }
+
+        /* Modal */
+        .seed-modal-box {
+            background: var(--color-surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+            width: 100%;
+            max-width: 480px;
+            margin: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+
+        .seed-modal-header {
+            background: rgba(212,142,16,0.08);
+            border-bottom: 1px solid rgba(212,142,16,0.2);
+            padding: 16px 20px;
+        }
+
+            .seed-modal-header h5 {
+                color: #d48e10;
+                font-weight: 600;
+                margin: 0;
+                font-size: 0.95rem;
+            }
+
+        .seed-modal-body {
+            padding: 20px;
+            font-size: 0.875rem;
+            color: var(--color-text);
+        }
+
+            .seed-modal-body p {
+                margin-bottom: 10px;
+            }
+
+            .seed-modal-body ul {
+                margin: 0 0 14px 20px;
+                padding: 0;
+                color: var(--color-muted);
+                font-size: 0.83rem;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+        .seed-modal-note {
+            font-size: 0.8rem !important;
+            color: var(--color-muted) !important;
+            background: var(--color-bg);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            margin: 0 !important;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .seed-modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-seed-confirm {
+            background: #d48e10;
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 8px 18px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition, all 0.2s ease);
+        }
+
+            .btn-seed-confirm:hover {
+                background: #b87a0e;
+            }
+    </style>
+}

@@ -1,0 +1,753 @@
+﻿@model TechSolutions.Models.EnrollmentHistory
+
+@{
+    ViewBag.Title = "Edit Enrollment";
+    var customer = ViewBag.Customer as TechSolutions.Models.Customer;
+
+    string statusVariant = Model.EnrollmentStatus == "Active" ? "success" :
+                           Model.EnrollmentStatus == "Completed" ? "info" :
+                           Model.EnrollmentStatus == "Withdrawn" ? "danger" :
+                           Model.EnrollmentStatus == "Deferred" ? "warning" : "default";
+
+    decimal outstanding = Model.CourseFee - Model.AmountPaid;
+    bool isFullyPaid = outstanding <= 0;
+}
+
+<!-- Toast Notifications -->
+@if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+{
+    <div id="toastContainer" style="position:fixed;top:80px;right:20px;z-index:9999;min-width:340px;max-width:480px;">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="app-toast alert alert-success" role="alert">
+                <strong><i class="fa-solid fa-circle-check"></i> Success</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["SuccessMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="app-toast app-toast-error alert alert-danger" role="alert">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Error</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["ErrorMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+    </div>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-pen-to-square"></i> Edit Enrollment</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            @customer.FullName &mdash;
+            <span class="customer-code">@customer.CustomerCode</span>
+            &mdash; <strong>@Model.CourseName</strong>
+        </span>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <a href="@Url.Action("Details", new { id = Model.EnrollmentID })" class="btn btn-default">
+            <i class="fa-solid fa-eye"></i> View Details
+        </a>
+        <a href="@Url.Action("Index", new { customerId = customer.CustomerID })" class="btn btn-default">
+            <i class="fa-solid fa-arrow-left"></i> Back to Enrollments
+        </a>
+    </div>
+</div>
+
+<!-- Current status banner -->
+<div class="enrollment-status-banner enrollment-banner-@statusVariant mb-4">
+    <div style="display:flex;align-items:center;gap:10px;">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <strong>@Model.CourseName</strong>
+        @if (!string.IsNullOrEmpty(Model.CourseCode))
+        {
+            <span class="customer-code">@Model.CourseCode</span>
+        }
+    </div>
+    <span class="badge badge-@statusVariant">@Model.EnrollmentStatus</span>
+</div>
+
+<!-- Form Card -->
+<div class="content-card">
+    <div class="content-card-header">
+        <h4 class="mb-0"><i class="fa-solid fa-pen-to-square"></i> Update Enrollment</h4>
+    </div>
+    <div class="content-card-body">
+
+        @using (Html.BeginForm("Edit", "Enrollment", FormMethod.Post, new { id = "enrollmentEditForm", novalidate = "novalidate" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.EnrollmentID)
+            @Html.HiddenFor(m => m.CustomerID)
+
+            if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mb-4">
+                    <strong><i class="fa-solid fa-triangle-exclamation"></i> Please fix the following errors:</strong>
+                    @Html.ValidationSummary(false, "", new { @class = "mb-0 mt-2" })
+                </div>
+            }
+
+            <!-- ── Section: Course Information ── -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-book"></i> Course Information
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CourseName, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-graduation-cap input-icon"></i>
+                                @Html.TextBoxFor(m => m.CourseName, new
+                                {
+                                    @class = "form-control has-icon",
+                                    placeholder = "e.g., Advanced Healthcare IT Training"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CourseName, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CourseCode, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-solid fa-hashtag input-icon"></i>
+                                @Html.TextBoxFor(m => m.CourseCode, new
+                                {
+                                    @class = "form-control has-icon",
+                                    placeholder = "e.g., AHIT-2025"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CourseCode, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Dates ── -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-regular fa-calendar"></i> Important Dates
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.EnrollmentDate, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-regular fa-calendar input-icon"></i>
+                                @Html.TextBoxFor(m => m.EnrollmentDate, "{0:yyyy-MM-dd}", new
+                                {
+                                    @class = "form-control has-icon",
+                                    type = "date"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.EnrollmentDate, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CourseStartDate, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-regular fa-calendar input-icon"></i>
+                                @Html.TextBoxFor(m => m.CourseStartDate, "{0:yyyy-MM-dd}", new
+                                {
+                                    @class = "form-control has-icon",
+                                    type = "date",
+                                    id = "courseStartDate"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CourseStartDate, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CourseEndDate, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-regular fa-calendar input-icon"></i>
+                                @Html.TextBoxFor(m => m.CourseEndDate, "{0:yyyy-MM-dd}", new
+                                {
+                                    @class = "form-control has-icon",
+                                    type = "date",
+                                    id = "courseEndDate"
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CourseEndDate, "", new { @class = "field-validation-error" })
+                            <span class="field-validation-error" id="dateError" style="display:none;">
+                                End date must be after start date.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Financial ── -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Financial Information
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CourseFee, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <span class="input-currency-prefix">R</span>
+                                @Html.TextBoxFor(m => m.CourseFee, "{0:F2}", new
+                                {
+    @class = "form-control has-currency",
+    id = "courseFee",
+    step = "0.01",
+    min = "0"
+})
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CourseFee, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.AmountPaid, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <span class="input-currency-prefix">R</span>
+                                @Html.TextBoxFor(m => m.AmountPaid, "{0:F2}", new
+                                {
+    @class = "form-control has-currency",
+    id = "amountPaid",
+    step = "0.01",
+    min = "0"
+})
+                            </div>
+                            @Html.ValidationMessageFor(m => m.AmountPaid, "", new { @class = "field-validation-error" })
+                            <span class="field-validation-error" id="amountError" style="display:none;">
+                                Amount paid cannot exceed the course fee.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.PaymentStatus, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.PaymentStatus,
+                                (SelectList)ViewBag.PaymentStatuses,
+                                new { @class = "form-control", id = "paymentStatus" })
+                            @Html.ValidationMessageFor(m => m.PaymentStatus, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outstanding balance display -->
+                <div class="outstanding-balance-card mt-3" id="balanceCard">
+                    <div class="outstanding-balance-left">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Outstanding Balance</span>
+                    </div>
+                    <div class="outstanding-balance-amount" id="outstandingDisplay">
+                        R @outstanding.ToString("N2")
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Enrollment Status ── -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-circle-info"></i> Enrollment Status
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.EnrollmentStatus, new { @class = "control-label" })
+                            @Html.DropDownListFor(m => m.EnrollmentStatus,
+                                (SelectList)ViewBag.EnrollmentStatuses,
+                                new { @class = "form-control", id = "enrollmentStatus" })
+                            @Html.ValidationMessageFor(m => m.EnrollmentStatus, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completion fields — visible only when status = Completed -->
+                <div id="completionSection" style="display:@(Model.EnrollmentStatus == "Completed" ? "block" : "none")">
+                    <div class="completion-reveal mt-3">
+                        <div class="completion-reveal-header">
+                            <i class="fa-solid fa-circle-check"></i> Completion Details
+                        </div>
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.CompletionDate, new { @class = "control-label" })
+                                    <div class="input-icon-wrap">
+                                        <i class="fa-regular fa-calendar input-icon"></i>
+                                        @Html.TextBoxFor(m => m.CompletionDate, "{0:yyyy-MM-dd}", new
+                                        {
+                                            @class = "form-control has-icon",
+                                            type = "date",
+                                            max = DateTime.Now.ToString("yyyy-MM-dd")
+                                        })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.CompletionDate, "", new { @class = "field-validation-error" })
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    @Html.LabelFor(m => m.Grade, new { @class = "control-label" })
+                                    <div class="input-icon-wrap">
+                                        <i class="fa-solid fa-star input-icon"></i>
+                                        @Html.TextBoxFor(m => m.Grade, new
+                                        {
+                                            @class = "form-control has-icon",
+                                            placeholder = "e.g., A, B, 85%"
+                                        })
+                                    </div>
+                                    @Html.ValidationMessageFor(m => m.Grade, "", new { @class = "field-validation-error" })
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Certificate ── -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-certificate"></i> Certificate
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="control-label">Certificate Issued</label>
+                            <div class="status-toggle-wrap">
+                                <label class="status-toggle-label" for="CertificateIssued">
+                                    @Html.CheckBoxFor(m => m.CertificateIssued, new { @class = "status-toggle-input", id = "CertificateIssued" })
+                                    <span class="status-toggle-track"><span class="status-toggle-thumb"></span></span>
+                                    <span class="status-toggle-text" id="certText">
+                                        @(Model.CertificateIssued ? "Certificate Issued" : "Not Yet Issued")
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificate date — shown only when toggle is on -->
+                    <div id="certDateSection" style="display:@(Model.CertificateIssued ? "block" : "none");" class="col-md-4">
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.CertificateIssueDate, new { @class = "control-label" })
+                            <div class="input-icon-wrap">
+                                <i class="fa-regular fa-calendar input-icon"></i>
+                                @Html.TextBoxFor(m => m.CertificateIssueDate, "{0:yyyy-MM-dd}", new
+                                {
+                                    @class = "form-control has-icon",
+                                    type = "date",
+                                    max = DateTime.Now.ToString("yyyy-MM-dd")
+                                })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.CertificateIssueDate, "", new { @class = "field-validation-error" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Section: Notes ── -->
+            <div class="form-section" style="border-bottom:none;margin-bottom:0;padding-bottom:0;">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-note-sticky"></i> Notes
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Notes, new { @class = "control-label" })
+                    @Html.TextAreaFor(m => m.Notes, new
+                    {
+                        @class = "form-control",
+                        rows = "3",
+                        placeholder = "Any additional notes about this enrollment…",
+                        maxlength = "1000"
+                    })
+                    @Html.ValidationMessageFor(m => m.Notes, "", new { @class = "field-validation-error" })
+                    <span class="help-block" id="notesCounter">
+                        @(Model.Notes?.Length ?? 0) / 1000 characters
+                    </span>
+                </div>
+            </div>
+
+            <!-- ── Action Buttons ── -->
+            <div class="form-actions">
+                <a href="@Url.Action("Index", new { customerId = customer.CustomerID })" class="btn btn-default btn-lg">
+                    <i class="fa-solid fa-xmark"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <style>
+        /* ── Shared ── */
+        .input-icon-wrap {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .form-control.has-icon {
+            padding-left: 36px !important;
+        }
+
+        .input-currency-prefix {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            color: var(--color-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .form-control.has-currency {
+            padding-left: 28px !important;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .form-section-header {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ── Status banner ── */
+        .enrollment-status-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 18px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid transparent;
+            font-size: 0.875rem;
+        }
+
+        .enrollment-banner-success {
+            background: var(--color-success-bg);
+            border-color: rgba(46,158,107,0.2);
+            color: var(--color-success);
+        }
+
+        .enrollment-banner-info {
+            background: var(--color-info-bg);
+            border-color: rgba(4,196,217,0.2);
+            color: var(--color-secondary-dark);
+        }
+
+        .enrollment-banner-warning {
+            background: var(--color-warning-bg);
+            border-color: rgba(212,142,16,0.2);
+            color: var(--color-warning);
+        }
+
+        .enrollment-banner-danger {
+            background: var(--color-danger-bg);
+            border-color: rgba(192,57,43,0.2);
+            color: var(--color-danger);
+        }
+
+        .enrollment-banner-default {
+            background: var(--color-bg);
+            border-color: var(--color-border);
+            color: var(--color-muted);
+        }
+
+        /* ── Outstanding balance ── */
+        .outstanding-balance-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--color-primary-light);
+            border: 1.5px solid rgba(4,119,191,0.2);
+            border-radius: var(--radius-sm);
+            padding: 12px 18px;
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+            .outstanding-balance-card.overdue {
+                background: var(--color-danger-bg);
+                border-color: rgba(192,57,43,0.25);
+            }
+
+        .outstanding-balance-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .outstanding-balance-card.overdue .outstanding-balance-left {
+            color: var(--color-danger);
+        }
+
+        .outstanding-balance-amount {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            font-family: var(--font-mono);
+        }
+
+        .outstanding-balance-card.overdue .outstanding-balance-amount {
+            color: var(--color-danger);
+        }
+
+        /* ── Completion reveal section ── */
+        .completion-reveal {
+            background: var(--color-success-bg);
+            border: 1.5px solid rgba(46,158,107,0.2);
+            border-radius: var(--radius-sm);
+            padding: 16px 18px;
+        }
+
+        .completion-reveal-header {
+            font-size: 0.825rem;
+            font-weight: 700;
+            color: var(--color-success);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 4px;
+        }
+
+        /* ── Status toggle ── */
+        .status-toggle-wrap {
+            display: flex;
+            align-items: center;
+            padding: 9px 0;
+        }
+
+        .status-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .status-toggle-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .status-toggle-track {
+            width: 44px;
+            height: 24px;
+            background: var(--color-border);
+            border-radius: var(--radius-pill);
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .status-toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .status-toggle-input:checked ~ .status-toggle-track {
+            background: var(--color-success);
+        }
+
+            .status-toggle-input:checked ~ .status-toggle-track .status-toggle-thumb {
+                transform: translateX(20px);
+            }
+
+        .status-toggle-text {
+            font-size: 0.875rem;
+            color: var(--color-text);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 24px;
+            margin-top: 24px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .customer-code {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .app-toast {
+            margin-bottom: 10px;
+            position: relative;
+        }
+    </style>
+
+    <script>
+        // Convert currency fields to number type after value is populated
+        document.addEventListener('DOMContentLoaded', function () {
+            ['courseFee', 'amountPaid'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) {
+                    // Replace comma decimal separator with dot before switching to number type to prevent server culture format issues.
+                    el.value = el.value.replace(',', '.');
+                    el.type = 'number';
+                }
+            });
+        });
+
+        // ── Outstanding balance calculator ──
+        function calculateOutstanding() {
+            var fee = parseFloat(document.getElementById('courseFee').value) || 0;
+            var paid = parseFloat(document.getElementById('amountPaid').value) || 0;
+            var outstanding = fee - paid;
+            var card = document.getElementById('balanceCard');
+            var display = document.getElementById('outstandingDisplay');
+            var err = document.getElementById('amountError');
+
+            display.textContent = 'R ' + outstanding.toFixed(2);
+
+            if (paid > fee) {
+                card.classList.add('overdue');
+                err.style.display = 'block';
+            } else {
+                card.classList.remove('overdue');
+                err.style.display = 'none';
+            }
+
+            // Auto-update payment status
+            var status = document.getElementById('paymentStatus');
+            if (outstanding <= 0 && fee > 0) {
+                status.value = 'Paid';
+            } else if (paid > 0 && outstanding > 0) {
+                status.value = 'Partial';
+            } else if (paid === 0) {
+                status.value = 'Pending';
+            }
+        }
+
+        document.getElementById('courseFee').addEventListener('input', calculateOutstanding);
+        document.getElementById('amountPaid').addEventListener('input', calculateOutstanding);
+
+        // ── Show / hide completion section based on status ──
+        document.getElementById('enrollmentStatus').addEventListener('change', function () {
+            var section = document.getElementById('completionSection');
+            section.style.display = this.value === 'Completed' ? 'block' : 'none';
+        });
+
+        // ── Certificate toggle ──
+        document.getElementById('CertificateIssued').addEventListener('change', function () {
+            document.getElementById('certText').textContent = this.checked ? 'Certificate Issued' : 'Not Yet Issued';
+            document.getElementById('certDateSection').style.display = this.checked ? 'block' : 'none';
+        });
+
+        // ── Date cross-validation ──
+        function validateDates() {
+            var start = document.getElementById('courseStartDate').value;
+            var end = document.getElementById('courseEndDate').value;
+            var err = document.getElementById('dateError');
+            if (start && end && new Date(end) <= new Date(start)) {
+                err.style.display = 'block';
+                return false;
+            }
+            err.style.display = 'none';
+            return true;
+        }
+
+        document.getElementById('courseStartDate').addEventListener('change', validateDates);
+        document.getElementById('courseEndDate').addEventListener('change', validateDates);
+
+        // ── Notes counter ──
+        var notesField = document.querySelector('textarea[name="Notes"]');
+        var counter = document.getElementById('notesCounter');
+        if (notesField && counter) {
+            notesField.addEventListener('input', function () {
+                counter.textContent = this.value.length + ' / 1000 characters';
+            });
+        }
+
+        // ── Form submit guard ──
+        document.getElementById('enrollmentEditForm').addEventListener('submit', function (e) {
+            if (!validateDates()) {
+                e.preventDefault();
+                showFormError('Course end date must be after the start date.');
+                return;
+            }
+            var fee = parseFloat(document.getElementById('courseFee').value) || 0;
+            var paid = parseFloat(document.getElementById('amountPaid').value) || 0;
+            if (paid > fee) {
+                e.preventDefault();
+                showFormError('Amount paid cannot exceed the course fee.');
+            }
+        });
+
+        function showFormError(msg) {
+            var existing = document.getElementById('jsFormError');
+            if (existing) existing.remove();
+            var el = document.createElement('div');
+            el.id = 'jsFormError';
+            el.className = 'alert alert-danger mb-3';
+            el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + msg;
+            document.getElementById('enrollmentEditForm').prepend(el);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ── Toast dismiss ──
+        setTimeout(function () {
+            document.querySelectorAll('.app-toast:not(.app-toast-error)').forEach(function (el) {
+                el.style.transition = 'all 0.35s ease-in';
+                el.style.opacity = '0'; el.style.transform = 'translateX(120%)';
+                setTimeout(function () { el.remove(); }, 350);
+            });
+        }, 5000);
+
+        document.querySelectorAll('.app-toast-close').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var t = this.closest('.app-toast');
+                t.style.transition = 'all 0.3s ease-in'; t.style.opacity = '0'; t.style.transform = 'translateX(120%)';
+                setTimeout(function () { t.remove(); }, 300);
+            });
+        });
+    </script>
+}

@@ -137,10 +137,11 @@ namespace TechSolutions.Controllers
         [AllowAnonymous]
         public ActionResult Register()
         {
-            return View();
+            ViewBag.RegisterAttempt = true;
+            return View("Login", new LoginViewModel());
         }
 
-        //
+        // Updated to include First and Last name fields and to return to the Login view with the appropriate error messages if the model state is invalid
         // POST: /Account/Register
         [HttpPost]
         [AllowAnonymous]
@@ -149,25 +150,41 @@ namespace TechSolutions.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FirstName = model.FirstName,
+                    LastName = model.LastName
+                };
+
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
-                    
-                    // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
-                    // Send an email with this link
-                    // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
-
+                    await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
                     return RedirectToAction("Index", "Home");
                 }
-                AddErrors(result);
+
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError("", error);
+            }
+            else
+            {
+                var fieldKeys = new[] { "FirstName", "LastName", "Email", "Password", "ConfirmPassword" };
+                foreach (var key in fieldKeys)
+                {
+                    if (ModelState.ContainsKey(key))
+                    {
+                        foreach (var err in ModelState[key].Errors)
+                            ModelState.AddModelError("", err.ErrorMessage);
+                        ModelState.Remove(key);
+                    }
+                }
             }
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
+            ViewBag.RegisterAttempt = true;
+            ViewBag.ReturnUrl = null;
+            return View("Login", new LoginViewModel());
         }
 
         //

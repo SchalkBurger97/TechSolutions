@@ -66,7 +66,8 @@ namespace TechSolutions.Models
 
         public DateTime? ModifiedDate { get; set; }
 
-        public int? ApprovedBy { get; set; }
+        [StringLength(128)]
+        public string ApprovedBy { get; set; }
 
         // Navigation property
         [ForeignKey("CustomerID")]

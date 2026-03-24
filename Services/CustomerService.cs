@@ -105,7 +105,7 @@ namespace TechSolutions.Services
         {
             try
             {
-                // Temporarily disable validation for delete operation
+                // Temporarily disable validation for delete operation since the entity is not being fully updated and we only want to update IsDeleted and ModifiedDate fields. This prevents validation errors for required fields that are not being modified.
                 var originalValidateOnSaveEnabled = _context.Configuration.ValidateOnSaveEnabled;
                 _context.Configuration.ValidateOnSaveEnabled = false;
 
@@ -166,8 +166,8 @@ namespace TechSolutions.Services
         private decimal CalculateDataQualityScore(Customer customer)
         {
             int score = 0;
-            int totalFields = 10;
 
+            // Example calculation just for some nice elements on the dash (can be made much more complex),
             // Required fields (10 points each)
             if (!string.IsNullOrWhiteSpace(customer.FirstName)) score += 10;
             if (!string.IsNullOrWhiteSpace(customer.LastName)) score += 10;

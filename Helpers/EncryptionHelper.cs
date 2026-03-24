@@ -89,9 +89,7 @@ namespace TechSolutions.Helpers
 
         #region File Encryption (for document uploads)
 
-        /// <summary>
         /// Encrypt a file and save to disk
-        /// </summary>
         public static void EncryptFile(string inputFilePath, string outputFilePath)
         {
             try
@@ -121,9 +119,7 @@ namespace TechSolutions.Helpers
             }
         }
 
-        /// <summary>
         /// Decrypt a file and return as byte array
-        /// </summary>
         public static byte[] DecryptFile(string encryptedFilePath)
         {
             try
@@ -154,9 +150,7 @@ namespace TechSolutions.Helpers
             }
         }
 
-        /// <summary>
         /// Decrypt file and save to output path
-        /// </summary>
         public static void DecryptFileToPath(string encryptedFilePath, string outputFilePath)
         {
             try
@@ -174,9 +168,7 @@ namespace TechSolutions.Helpers
 
         #region Helper Methods
 
-        /// <summary>
         /// Mask a sensitive string for display (show last 4 characters only)
-        /// </summary>
         public static string MaskSensitiveData(string data, int visibleChars = 4)
         {
             if (string.IsNullOrEmpty(data))

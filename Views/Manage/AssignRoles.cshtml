@@ -1,0 +1,214 @@
+﻿@model TechSolutions.Models.AssignRolesViewModel
+
+@{
+    ViewBag.Title = "Assign Roles — " + Model.FullName;
+
+    var parts = (Model.FullName ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+    var initials = parts.Length >= 2 ? $"{parts[0][0]}{parts[parts.Length - 1][0]}"
+                 : parts.Length == 1 ? parts[0][0].ToString() : "?";
+
+    var assignedCount = Model.Roles.Count(r => r.IsSelected);
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-user-shield"></i> Assign Roles</h2>
+        <span class="text-muted" style="font-size:0.875rem;">Update role assignments for this user</span>
+    </div>
+    <a href="@Url.Action("UserRoles")" class="btn btn-default">
+        <i class="fa-solid fa-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<div class="row g-3">
+
+    <!-- ── Left: User Profile Card ── -->
+    <div class="col-md-4">
+        <div class="content-card">
+            <div class="content-card-header">
+                <h4 class="mb-0"><i class="fa-solid fa-user"></i> User Profile</h4>
+            </div>
+            <div class="content-card-body" style="text-align:center;padding:32px 20px;">
+                <div class="profile-avatar" style="width:72px;height:72px;font-size:1.6rem;margin:0 auto 16px;">
+                    <span>@initials</span>
+                </div>
+                <h5 style="font-size:1.05rem;font-weight:700;color:var(--color-text);margin:0 0 4px;">@Model.FullName</h5>
+                <p style="font-size:0.825rem;color:var(--color-muted);margin:0 0 16px;word-break:break-all;">@Model.UserName</p>
+
+                <!-- Current role summary -->
+                <div class="detail-section" style="text-align:left;margin-top:8px;">
+                    <div class="detail-section-title">
+                        <i class="fa-solid fa-shield-halved"></i> Current Roles
+                    </div>
+                    <div style="padding:12px 16px;">
+                        @if (assignedCount > 0)
+                        {
+                            foreach (var role in Model.Roles.Where(r => r.IsSelected))
+                            {
+                                <span class="badge badge-primary" style="margin:2px;">@role.RoleName</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge badge-default">No roles assigned</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Right: Role Assignment Form ── -->
+    <div class="col-md-8">
+        <div class="content-card">
+            <div class="content-card-header">
+                <h4 class="mb-0"><i class="fa-solid fa-list-check"></i> Role Assignments</h4>
+            </div>
+            <div class="content-card-body">
+
+                @using (Html.BeginForm("AssignRoles", "Manage", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.UserId)
+                    @Html.HiddenFor(m => m.UserName)
+                    @Html.HiddenFor(m => m.FullName)
+
+                    @Html.ValidationSummary(true, "", new { @class = "validation-summary-errors" })
+
+                    if (!Model.Roles.Any())
+                    {
+                        <div class="alert alert-info">
+                            <i class="fa-solid fa-circle-info"></i>
+                            No roles have been created in the system yet. Add entries to <code>AspNetRoles</code> first.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="detail-section mb-4">
+                            <div class="detail-section-title">
+                                <i class="fa-solid fa-shield-halved"></i> Available Roles
+                                <span class="ms-auto" style="font-weight:400;font-size:0.75rem;color:var(--color-muted);text-transform:none;letter-spacing:0;">
+                                    Select all that apply
+                                </span>
+                            </div>
+
+                            @for (int i = 0; i < Model.Roles.Count; i++)
+                            {
+                                @Html.HiddenFor(m => m.Roles[i].RoleName)
+
+                                var isChecked = Model.Roles[i].IsSelected;
+                                var rowClass = isChecked ? "role-row role-row-active" : "role-row";
+                                var badgeClass = isChecked ? "badge-primary" : "badge-default";
+                                var lastRow = i == Model.Roles.Count - 1 ? "border-bottom:none;" : "";
+
+                                <label class="@rowClass" style="@lastRow">
+                                    @Html.CheckBoxFor(m => m.Roles[i].IsSelected, new { @class = "role-checkbox" })
+                                    <div class="role-row-info">
+                                        <span class="role-row-name">@Model.Roles[i].RoleName</span>
+                                    </div>
+                                    <span class="badge @badgeClass role-row-badge">
+                                        @(isChecked ? "Assigned" : "Not Assigned")
+                                    </span>
+                                </label>
+                            }
+                        </div>
+                    }
+
+                    <div style="display:flex;gap:10px;padding-top:4px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        </button>
+                        <a href="@Url.Action("UserRoles")" class="btn btn-default">
+                            <i class="fa-solid fa-xmark"></i> Cancel
+                        </a>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        /* Profile avatar — re-uses Details.cshtml pattern */
+        .profile-avatar {
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+            letter-spacing: -1px;
+        }
+
+        /* Role rows — styled like detail-row but as clickable labels */
+        .role-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--color-border);
+            cursor: pointer;
+            transition: var(--transition);
+            margin: 0;
+            font-weight: normal;
+        }
+
+            .role-row:hover {
+                background: var(--color-primary-light);
+            }
+
+        .role-row-active {
+            background: var(--color-primary-light);
+        }
+
+        .role-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--color-primary);
+            cursor: pointer;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .role-row-info {
+            flex: 1;
+        }
+
+        .role-row-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .role-row-badge {
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+    </style>
+
+    <script>
+        // Live badge swap when checkbox changes
+        document.querySelectorAll('.role-checkbox').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                var row    = this.closest('.role-row');
+                var badge  = row.querySelector('.role-row-badge');
+
+                if (this.checked) {
+                    row.classList.add('role-row-active');
+                    badge.className = 'badge badge-primary role-row-badge';
+                    badge.textContent = 'Assigned';
+                } else {
+                    row.classList.remove('role-row-active');
+                    badge.className = 'badge badge-default role-row-badge';
+                    badge.textContent = 'Not Assigned';
+                }
+            });
+        });
+    </script>
+}

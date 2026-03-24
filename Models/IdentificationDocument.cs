@@ -15,23 +15,17 @@ namespace TechSolutions.Models
         [Required]
         [StringLength(50)]
         [Display(Name = "Document Type")]
-        public string DocumentType { get; set; } // Driver's License, Passport, etc.
+        public string DocumentType { get; set; } // Driver's License, Passport, National ID Card, Other
 
-        [StringLength(100)]
-        [Display(Name = "Document Number")]
-        public string DocumentNumber { get; set; } // Encrypted - can be ID, Passport, or any number
-
-        [StringLength(50)]
-        [Display(Name = "ID Number")]
-        public string IDNumber { get; set; } // Encrypted
-
-        [StringLength(50)]
-        [Display(Name = "Passport Number")]
-        public string PassportNumber { get; set; } // Encrypted
-
-        [StringLength(100)]
-        [Display(Name = "Professional Registration Number")]
-        public string ProfessionalRegNumber { get; set; } // Encrypted
+        /// <summary>
+        /// Auto-generated system reference number — not a sensitive identity number.
+        /// Format: {PREFIX}-{YYYY}-{SEQUENCE:D5}  e.g. DRV-2025-00031
+        /// Prefixes: DRV (Driver's License), PSP (Passport), NID (National ID Card), OTH (Other)
+        /// This field is NOT encrypted.
+        /// </summary>
+        [StringLength(30)]
+        [Display(Name = "Document Reference")]
+        public string DocumentNumber { get; set; }
 
         [StringLength(100)]
         [Display(Name = "Issuing Authority")]
@@ -53,7 +47,8 @@ namespace TechSolutions.Models
         [Display(Name = "Verified Date")]
         public DateTime? VerifiedDate { get; set; }
 
-        public int? VerifiedBy { get; set; }
+        [StringLength(128)]
+        public string VerifiedBy { get; set; }
 
         [StringLength(500)]
         [Display(Name = "Verification Notes")]
@@ -61,7 +56,9 @@ namespace TechSolutions.Models
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
         public DateTime? ModifiedDate { get; set; }
-        public int? CreatedBy { get; set; }
+
+        [StringLength(128)]
+        public string CreatedBy { get; set; }
 
         [StringLength(500)]
         [Display(Name = "Document File Path")]

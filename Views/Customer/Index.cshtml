@@ -3,348 +3,475 @@
     ViewBag.Title = "Customer Management";
 }
 
-<div class="app-theme">
-    <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <h2>Customer Management</h2>
-                <p class="text-muted">Manage and view customer records</p>
-            </div>
-            @if (Model.Count > 0)
-            {
-                <div class="col-md-6 text-right">
-                    <a href="@Url.Action("Create")" class="btn btn-primary" style="float:right">
-                        <i class="fa fa-plus"></i> Add New Customer
-                    </a>
-                </div>
-            }
-        </div>
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-users"></i> Customer Management</h2>
+        <span class="text-muted" style="font-size: 0.875rem;">Manage and view customer records</span>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Add New Customer
+    </a>
+</div>
 
-        <!-- Success/Error Messages -->
-        @if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+<!-- Toast Notifications -->
+@if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+{
+    <div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 340px; max-width: 480px;">
+        @if (TempData["SuccessMessage"] != null)
         {
-            <div id="toastContainer" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;">
-                @if (TempData["SuccessMessage"] != null)
-                {
-                    <div class="alert alert-success alert-dismissible app-toast" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #3c763d; background-color: #dff0d8; border-radius: var(--border-radius);">
-                        <button type="button" class="close app-toast-close" data-dismiss="alert" aria-label="Close" style="opacity: 1; color: #3c763d; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <div style="padding-right: 20px;">
-                            <strong style="color: #3c763d;"><i class="fa fa-check-circle"></i> Success!</strong>
-                            <div style="margin-top: 5px; color: #3c763d;">@TempData["SuccessMessage"]</div>
-                        </div>
-                    </div>
-                }
+            <div class="app-toast alert alert-success alert-dismissible" role="alert">
+                <strong><i class="fa-solid fa-circle-check"></i> Success</strong>
+                <p class="mb-0 mt-1" style="font-size: 0.825rem;">@TempData["SuccessMessage"]</p>
+                <button type="button" class="app-toast-close" data-bs-dismiss="alert" aria-label="Close"
+                        style="position:absolute; top:10px; right:12px; background:none; border:none; font-size:1.2rem; cursor:pointer; color: inherit; opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="app-toast app-toast-error alert alert-danger alert-dismissible" role="alert">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Error</strong>
+                <p class="mb-0 mt-1" style="font-size: 0.825rem;">@TempData["ErrorMessage"]</p>
+                <button type="button" class="app-toast-close" data-bs-dismiss="alert" aria-label="Close"
+                        style="position:absolute; top:10px; right:12px; background:none; border:none; font-size:1.2rem; cursor:pointer; color: inherit; opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+    </div>
+}
 
-                @if (TempData["ErrorMessage"] != null)
+<!-- Customer Directory Card -->
+<div class="content-card">
+    <div class="content-card-header d-flex align-items-center justify-content-between">
+        <h4 class="mb-0"><i class="fa-solid fa-address-book"></i> Customer Directory</h4>
+        @if (Model.Count > 0)
+        {
+            <span class="text-muted" style="font-size: 0.8rem; font-weight: 500;">
+                @Model.Count of @ViewBag.TotalCustomers records
+            </span>
+        }
+    </div>
+    <div class="content-card-body">
+
+        <!-- Search Bar -->
+        <form method="get" action="@Url.Action("Index")" class="customer-search-form mb-4">
+            <div class="search-input-wrap">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" name="search" class="form-control search-input"
+                       placeholder="Search by name, email, phone or customer code…"
+                       value="@ViewBag.SearchTerm" />
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-magnifying-glass"></i> Search
+            </button>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
+            {
+                <a href="@Url.Action("Index")" class="btn btn-default">
+                    <i class="fa-solid fa-xmark"></i> Clear
+                </a>
+            }
+        </form>
+
+        <!-- Customer Table -->
+        @if (Model.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead style="text-align:center">
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Type</th>
+                            <th>Quality</th>
+                            <th>Status</th>
+                            <th style="width: 120px; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var customer in Model)
+                        {
+                            var scoreVariant = customer.DataQualityScore >= 80 ? "success" :
+                                               customer.DataQualityScore >= 60 ? "warning" : "danger";
+                            <tr>
+                                <td>
+                                    <span class="customer-code">@customer.CustomerCode</span>
+                                </td>
+                                <td>
+                                    <strong>@customer.FullName</strong>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(customer.Email))
+                                    {
+                                        <a href="mailto:@customer.Email" class="table-link">
+                                             @customer.Email
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic" style="font-size:0.8rem;">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(customer.Phone))
+                                    {
+                                        <span>@customer.Phone</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fst-italic" style="font-size:0.8rem;">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge badge-info" style="white-space:normal;max-width:100px;display:inline-block;line-height:1.4;">
+                                        @customer.CustomerType
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-@scoreVariant">
+                                        @customer.DataQualityScore%
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (customer.IsActive)
+                                    {
+                                        <span class="badge badge-success">
+                                            <i class="fa-solid fa-circle-check"></i> Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-danger">
+                                            <i class="fa-solid fa-circle-xmark"></i> Inactive
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="table-actions">
+                                        <a href="@Url.Action("Details", new { id = customer.CustomerID })"
+                                           class="table-action-btn" title="View Details">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", new { id = customer.CustomerID })"
+                                           class="table-action-btn" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <button type="button" class="table-action-btn table-action-danger" title="Delete"
+                                                onclick="confirmDelete(@customer.CustomerID, '@customer.FullName')">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer: count + pagination -->
+            <div class="table-footer mt-3">
+                <p class="text-muted mb-0" style="font-size: 0.825rem;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Showing <strong>@Model.Count</strong> of <strong>@ViewBag.TotalCustomers</strong> customers
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
+                    {
+                        <span> &mdash; filtered by <em>"@ViewBag.SearchTerm"</em></span>
+                    }
+                </p>
+
+                @if (ViewBag.TotalPages > 1)
                 {
-                    <div class="alert alert-danger alert-dismissible app-toast app-toast-error" role="alert" style="margin-bottom: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-left: 4px solid #a94442; background-color: #f2dede; border-radius: var(--border-radius);">
-                        <button type="button" class="close app-toast-close" aria-label="Close" style="opacity: 1; color: #a94442; font-size: 24px; font-weight: 300; line-height: 1; text-shadow: none;">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                        <div style="padding-right: 20px;">
-                            <strong style="color: #a94442;"><i class="fa fa-exclamation-triangle"></i> Error!</strong>
-                            <div style="margin-top: 5px; color: #a94442;">@TempData["ErrorMessage"]</div>
-                        </div>
-                    </div>
+                    <nav aria-label="Customer pagination">
+                        <ul class="pagination mb-0">
+                            @if (ViewBag.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", new { search = ViewBag.SearchTerm, page = ViewBag.CurrentPage - 1 })">
+                                        <i class="fa-solid fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { search = ViewBag.SearchTerm, page = i })">@i</a>
+                                </li>
+                            }
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", new { search = ViewBag.SearchTerm, page = ViewBag.CurrentPage + 1 })">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
                 }
             </div>
         }
-
-        <div class="panel panel-default">
-            <div class="panel-heading" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: #fff;">
-                <h4 class="panel-title" style="margin: 0; color: #fff;">
-                    <i class="fa fa-users"></i> Customer Directory
-                </h4>
-            </div>
-            <div class="panel-body">
-                <!-- Search Bar -->
-                <form method="get" action="@Url.Action("Index")" class="form-inline" style="margin-bottom: 20px;">
-                    <div class="form-group" style="width: 70%;">
-                        <input type="text" name="search" class="form-control" style="width: 100%;"
-                               placeholder="Search by name, email, phone, or customer code..."
-                               value="@ViewBag.SearchTerm" />
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-search"></i> Search
-                    </button>
-                    @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
-                    {
-                        <a href="@Url.Action("Index")" class="btn btn-default">
-                            <i class="fa fa-times"></i> Clear
-                        </a>
-                    }
-                </form>
-
-                <!-- Customer Table -->
-                @if (Model.Count > 0)
+        else
+        {
+            <!-- Empty State -->
+            <div class="empty-state">
+                <i class="fa-solid fa-users-slash empty-state-icon"></i>
+                @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
                 {
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Customer Code</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Phone</th>
-                                    <th>Type</th>
-                                    <th>Quality Score</th>
-                                    <th>Status</th>
-                                    <th style="width: 150px;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var customer in Model)
-                                {
-                                    <tr>
-                                        <td><strong>@customer.CustomerCode</strong></td>
-                                        <td>@customer.FullName</td>
-                                        <td>
-                                            @if (!string.IsNullOrWhiteSpace(customer.Email))
-                                            {
-                                                <a href="mailto:@customer.Email">@customer.Email</a>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">No email</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            @if (!string.IsNullOrWhiteSpace(customer.Phone))
-                                            {
-                                                @customer.Phone
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">No phone</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            <span class="label label-info" style="background-color: #d9edf7; color: #31708f; border: 1px solid #31708f; font-weight: 600;">
-                                                @customer.CustomerType
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @{
-                                                var scoreClass = customer.DataQualityScore >= 80 ? "success" :
-                                                                customer.DataQualityScore >= 60 ? "warning" : "danger";
-
-                                                var scoreColor = customer.DataQualityScore >= 80 ? "#3c763d" :
-                                                                customer.DataQualityScore >= 60 ? "#8a6d3b" : "#a94442";
-
-                                                var scoreBg = customer.DataQualityScore >= 80 ? "#d4edda" :
-                                                             customer.DataQualityScore >= 60 ? "#fcf8e3" : "#f2dede";
-                                            }
-                                            <span class="label label-@scoreClass" style="background-color: @scoreBg; color: @scoreColor; border: 1px solid @scoreColor; font-weight: 600;">
-                                                @customer.DataQualityScore%
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if (customer.IsActive)
-                                            {
-                                                <span class="label label-success" style="background-color: #d4edda; color: #3c763d; border: 1px solid #3c763d; font-weight: 600;">
-                                                    <i class="fa fa-check-circle"></i> Active
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="label label-danger" style="background-color: #f2dede; color: #a94442; border: 1px solid #a94442; font-weight: 600;">
-                                                    <i class="fa fa-times-circle"></i> Inactive
-                                                </span>
-                                            }
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="@Url.Action("Details", new { id = customer.CustomerID })"
-                                                   class="btn btn-default" title="View Details">
-                                                    <i class="fa fa-eye"></i>
-                                                </a>
-                                                <a href="@Url.Action("Edit", new { id = customer.CustomerID })"
-                                                   class="btn btn-default" title="Edit">
-                                                    <i class="fa fa-pencil"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-danger" title="Delete"
-                                                        onclick="confirmDelete(@customer.CustomerID, '@customer.FullName')">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Customer Count-->
-                    <div class="row" style="margin-top: 15px; padding-top: 15px;">
-                        <div class="col-md-6">
-                            <p class="text-muted" style="margin: 0;">
-                                <i class="fa fa-info-circle"></i> Showing <strong>@Model.Count</strong> of <strong>@ViewBag.TotalCustomers</strong> customers
-                                @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
-                                {
-                                    <span> (filtered by: "<strong>@ViewBag.SearchTerm</strong>")</span>
-                                }
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <!-- Pagination -->
-                            @if (ViewBag.TotalPages > 1)
-                            {
-                                <nav aria-label="Page navigation" class="text-right" style="margin: 0;">
-                                    <ul class="pagination" style="margin: 0;">
-                                        @if (ViewBag.CurrentPage > 1)
-                                        {
-                                            <li>
-                                                <a href="@Url.Action("Index", new { search = ViewBag.SearchTerm, page = ViewBag.CurrentPage - 1 })">
-                                                    <span aria-hidden="true">&laquo;</span>
-                                                </a>
-                                            </li>
-                                        }
-
-                                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
-                                        {
-                                            <li class="@(i == ViewBag.CurrentPage ? "active" : "")">
-                                                <a href="@Url.Action("Index", new { search = ViewBag.SearchTerm, page = i })">@i</a>
-                                            </li>
-                                        }
-
-                                        @if (ViewBag.CurrentPage < ViewBag.TotalPages)
-                                        {
-                                            <li>
-                                                <a href="@Url.Action("Index", new { search = ViewBag.SearchTerm, page = ViewBag.CurrentPage + 1 })">
-                                                    <span aria-hidden="true">&raquo;</span>
-                                                </a>
-                                            </li>
-                                        }
-                                    </ul>
-                                </nav>
-                            }
-                        </div>
-                    </div>
+                    <h5>No results found</h5>
+                    <p>No customers match <em>"@ViewBag.SearchTerm"</em>. Try a different search term.</p>
+                    <a href="@Url.Action("Index")" class="btn btn-default">
+                        <i class="fa-solid fa-xmark"></i> Clear Search
+                    </a>
                 }
                 else
                 {
-                    <div class="alert alert-info" style="margin-top: 20px;">
-                        <h4><i class="fa fa-info-circle"></i> No customers found</h4>
-                        @if (!string.IsNullOrWhiteSpace(ViewBag.SearchTerm))
-                        {
-                            <p>No customers match your search term "<strong>@ViewBag.SearchTerm</strong>".</p>
-                            <a href="@Url.Action("Index")" class="btn btn-default">
-                                <i class="fa fa-times"></i> Clear Search
-                            </a>
-                        }
-                        else
-                        {
-                            <p>Get started by adding your first customer.</p>
-                            <a href="@Url.Action("Create")" class="btn btn-primary">
-                                <i class="fa fa-plus"></i> Add New Customer
-                            </a>
-                        }
-                    </div>
+                    <h5>No customers yet</h5>
+                    <p>Get started by adding your first customer record.</p>
+                    <a href="@Url.Action("Create")" class="btn btn-primary">
+                        <i class="fa-solid fa-plus"></i> Add New Customer
+                    </a>
                 }
             </div>
-        </div>
+        }
+    </div>
+</div>
 
-        <!-- Delete Confirmation Modal (keep this at the bottom) -->
-        <div class="modal fade app-confirm-modal" id="appConfirmModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">Confirm Action</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p id="appConfirmMessage"></p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-primary" id="appConfirmOk">Confirm</button>
-                    </div>
-                </div>
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-md); border: 1px solid var(--color-border); overflow: hidden;">
+            <div class="modal-header" style="background: var(--color-danger-bg); border-bottom: 1px solid rgba(192,57,43,0.2); padding: 16px 20px;">
+                <h5 class="modal-title" style="color: var(--color-danger); font-weight: 600; margin: 0;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete
+                </h5>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <p id="deleteMessage" class="mb-0" style="font-size: 0.9rem; color: var(--color-text);"></p>
+            </div>
+            <div class="modal-footer" style="padding: 12px 20px; border-top: 1px solid var(--color-border); gap: 8px;">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fa-solid fa-trash"></i> Delete
+                </button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Hidden form for delete -->
-    <form id="deleteForm" method="post" style="display:none;">
-        @Html.AntiForgeryToken()
-    </form>
+<!-- Hidden delete form -->
+<form id="deleteForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
 
-    @section Scripts {
-        <script>
-        function confirmDelete(customerId, customerName) {
-            $('#appConfirmMessage').text(
-                'Are you sure you want to delete customer: ' + customerName + '?'
-            );
-            $('#appConfirmModal').modal('show');
-            $('#appConfirmOk').off('click').on('click', function () {
-                var form = document.getElementById('deleteForm');
-                form.action = '@Url.Action("Delete", "Customer")' + '/' + customerId;
-                form.submit();
-            });
-        }
-
-        // Slide-in animation for toasts
-        $(document).ready(function() {
-            $('.app-toast').each(function(index) {
-                var $toast = $(this);
-                $toast.css({
-                    'opacity': '0',
-                    'transform': 'translateX(400px)'
-                });
-
-                setTimeout(function() {
-                    $toast.animate({
-                        'opacity': '1'
-                    }, 400);
-                    $toast.css({
-                        'transform': 'translateX(0)',
-                        'transition': 'transform 0.4s ease-out'
-                    });
-                }, index * 100);
-            });
-        });
-
-        // Auto-hide ONLY success messages after 5 seconds (NOT errors)
-        setTimeout(function () {
-            $('.app-toast:not(.app-toast-error)').each(function(index) {
-                var $toast = $(this);
-                setTimeout(function() {
-                    $toast.css({
-                        'transform': 'translateX(400px)',
-                        'transition': 'all 0.3s ease-in',
-                        'opacity': '0'
-                    });
-                    setTimeout(function() {
-                        $toast.remove();
-                    }, 300);
-                }, index * 100);
-            });
-        }, 5000);
-
-        // Manual close with animation
-        $('.app-toast-close').on('click', function() {
-            var $toast = $(this).closest('.app-toast');
-            $toast.css({
-                'transform': 'translateX(400px)',
-                'transition': 'all 0.3s ease-in',
-                'opacity': '0'
-            });
-            setTimeout(function() {
-                $toast.remove();
-            }, 300);
-        });
-        </script>
-    }
-
+@section Scripts {
     <style>
-        .mb-3 {
-            margin-bottom: 1rem;
+        /* ── Search Bar ── */
+        .customer-search-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
-        .table > tbody > tr > td {
-            vertical-align: middle;
+        .search-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .search-input {
+            padding-left: 36px !important;
+        }
+
+        /* ── Customer Code ── */
+        .customer-code {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* ── Table Link ── */
+        .table-link {
+            color: var(--color-primary);
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+            .table-link:hover {
+                color: var(--color-secondary);
+            }
+
+        /* ── Table Action Buttons ── */
+        .table-actions {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .table-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+            .table-action-btn:hover {
+                background: var(--color-primary-light);
+                border-color: var(--color-primary);
+                color: var(--color-primary);
+                transform: translateY(-1px);
+            }
+
+        .table-action-danger:hover {
+            background: var(--color-danger-bg);
+            border-color: var(--color-danger);
+            color: var(--color-danger);
+        }
+
+        /* ── Table Footer ── */
+        .table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--color-border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* ── Pagination ── */
+        .pagination {
+            display: flex;
+            gap: 4px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page-item .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+            padding: 0 10px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+            .page-item .page-link:hover {
+                background: var(--color-primary-light);
+                border-color: var(--color-primary);
+                color: var(--color-primary);
+            }
+
+        .page-item.active .page-link {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #fff;
+        }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--color-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3.5rem;
+            opacity: 0.2;
+            display: block;
+            margin-bottom: 20px;
+            color: var(--color-primary);
+        }
+
+        .empty-state h5 {
+            color: var(--color-text);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+        }
+
+        /* ── Toast ── */
+        .app-toast {
+            margin-bottom: 10px;
+            position: relative;
         }
     </style>
-</div>
+
+    <script>
+    function confirmDelete(customerId, customerName) {
+        document.getElementById('deleteMessage').textContent =
+            'Are you sure you want to permanently delete "' + customerName + '"? This action cannot be undone.';
+
+        var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+
+        document.getElementById('confirmDeleteBtn').onclick = function () {
+            var form = document.getElementById('deleteForm');
+            form.action = '@Url.Action("Delete", "Customer")' + '/' + customerId;
+            form.submit();
+        };
+    }
+
+    // Auto-dismiss success toasts after 5s
+    setTimeout(function () {
+        document.querySelectorAll('.app-toast:not(.app-toast-error)').forEach(function (el) {
+            el.style.transition = 'all 0.35s ease-in';
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(120%)';
+            setTimeout(function () { el.remove(); }, 350);
+        });
+    }, 5000);
+
+    // Manual close
+    document.querySelectorAll('.app-toast-close').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var toast = this.closest('.app-toast');
+            toast.style.transition = 'all 0.3s ease-in';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(120%)';
+            setTimeout(function () { toast.remove(); }, 300);
+        });
+    });
+    </script>
+}

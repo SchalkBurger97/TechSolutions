@@ -1,18 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using TechSolutions.Models;
+using TechSolutions.Services;
+using Microsoft.AspNet.Identity;
 
 namespace TechSolutions.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Employee")]
     public class ClearanceController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AuditService _audit;
 
         public ClearanceController()
         {
             _context = new ApplicationDbContext();
+            _audit = new AuditService(_context);
         }
 
         // GET: Clearance/Manage/5
@@ -25,7 +30,6 @@ namespace TechSolutions.Controllers
                 return RedirectToAction("Index", "Customer");
             }
 
-            // Get existing clearance or create new one
             var clearance = _context.MedicalClearances
                 .FirstOrDefault(m => m.CustomerID == customerId);
 
@@ -53,53 +57,84 @@ namespace TechSolutions.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var customer = _context.Customers.Find(model.CustomerID);
-                ViewBag.Customer = customer;
+                ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                 return View(model);
             }
 
             try
             {
+                var customer = _context.Customers.Find(model.CustomerID);
+                string entityDesc = customer != null
+                    ? $"{customer.FullName} ({customer.CustomerCode})"
+                    : $"CustomerID {model.CustomerID}";
+
                 var existing = _context.MedicalClearances
                     .FirstOrDefault(m => m.CustomerID == model.CustomerID);
 
                 if (existing == null)
                 {
-                    // Create new
+                    // ── Create ──
                     model.CreatedDate = DateTime.Now;
                     model.ModifiedDate = DateTime.Now;
+
+                    if (model.ClearanceStatus == "Approved")
+                        model.ApprovedBy = User.Identity.GetUserId();
+
                     _context.MedicalClearances.Add(model);
+                    _context.SaveChanges();
+
+                    _audit.Log(this, "Create", "Clearance", model.ClearanceID,
+                        entityDesc,
+                        $"Medical clearance created with status '{model.ClearanceStatus}'.");
                 }
                 else
                 {
-                    // Update existing - ALL FIELDS
+                    // ── Build field changes ──
+                    var changes = new Dictionary<string, (string, string)>
+                    {
+                        ["Status"] = (existing.ClearanceStatus, model.ClearanceStatus),
+                        ["Healthcare Facility"] = (existing.HealthcareFacility, model.HealthcareFacility),
+                        ["Has TB Test"] = (existing.HasTBTest.ToString(), model.HasTBTest.ToString()),
+                        ["TB Test Date"] = (existing.TBTestDate?.ToString("dd/MM/yyyy"), model.TBTestDate?.ToString("dd/MM/yyyy")),
+                        ["TB Expiry Date"] = (existing.TBTestExpiryDate?.ToString("dd/MM/yyyy"), model.TBTestExpiryDate?.ToString("dd/MM/yyyy")),
+                        ["Has COVID Vaccination"] = (existing.HasCOVIDVaccination.ToString(), model.HasCOVIDVaccination.ToString()),
+                        ["COVID Status"] = (existing.CovidVaccinationStatus, model.CovidVaccinationStatus),
+                        ["Has Background Check"] = (existing.HasBackgroundCheck.ToString(), model.HasBackgroundCheck.ToString()),
+                        ["Background Check Status"] = (existing.BackgroundCheckStatus, model.BackgroundCheckStatus),
+                        ["Cleared for Onsite"] = (existing.ClearedForOnsiteTraining.ToString(), model.ClearedForOnsiteTraining.ToString()),
+                        ["Notes"] = (existing.ClearanceNotes, model.ClearanceNotes),
+                    };
+
+                    string fieldChanges = _audit.BuildFieldChanges(changes);
+
+                    // ── Update ──
                     existing.HealthcareFacility = model.HealthcareFacility;
                     existing.ClearanceStatus = model.ClearanceStatus;
-
-                    // TB Test
                     existing.HasTBTest = model.HasTBTest;
                     existing.TBTestDate = model.TBTestDate;
                     existing.TBTestResult = model.TBTestResult;
                     existing.TBTestExpiryDate = model.TBTestExpiryDate;
-
-                    // COVID Vaccination
                     existing.HasCOVIDVaccination = model.HasCOVIDVaccination;
                     existing.CovidVaccinationStatus = model.CovidVaccinationStatus;
                     existing.LastVaccinationDate = model.LastVaccinationDate;
                     existing.VaccineBrand = model.VaccineBrand;
-
-                    // Background Check
                     existing.HasBackgroundCheck = model.HasBackgroundCheck;
                     existing.BackgroundCheckStatus = model.BackgroundCheckStatus;
                     existing.BackgroundCheckDate = model.BackgroundCheckDate;
-
-                    // Overall
                     existing.ClearedForOnsiteTraining = model.ClearedForOnsiteTraining;
                     existing.ClearanceNotes = model.ClearanceNotes;
                     existing.ModifiedDate = DateTime.Now;
-                }
 
-                _context.SaveChanges();
+                    if (model.ClearanceStatus == "Approved" && existing.ClearanceStatus != "Approved")
+                        existing.ApprovedBy = User.Identity.GetUserId();
+
+                    _context.SaveChanges();
+
+                    _audit.Log(this, "Update", "Clearance", existing.ClearanceID,
+                        entityDesc,
+                        $"Medical clearance updated. Status: '{model.ClearanceStatus}'.",
+                        fieldChanges);
+                }
 
                 TempData["SuccessMessage"] = "Medical clearance updated successfully.";
                 return RedirectToAction("Details", "Customer", new { id = model.CustomerID });
@@ -107,18 +142,14 @@ namespace TechSolutions.Controllers
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = "Error saving medical clearance: " + ex.Message;
-                var customer = _context.Customers.Find(model.CustomerID);
-                ViewBag.Customer = customer;
+                ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                 return View(model);
             }
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                _context.Dispose();
-            }
+            if (disposing) { _context.Dispose(); _audit.Dispose(); }
             base.Dispose(disposing);
         }
     }

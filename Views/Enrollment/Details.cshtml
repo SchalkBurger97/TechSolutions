@@ -1,0 +1,503 @@
+﻿@model TechSolutions.Models.EnrollmentHistory
+
+@{
+    ViewBag.Title = "Enrollment Details";
+    var customer = ViewBag.Customer as TechSolutions.Models.Customer;
+
+    string statusVariant = Model.EnrollmentStatus == "Active" ? "success" :
+                           Model.EnrollmentStatus == "Completed" ? "info" :
+                           Model.EnrollmentStatus == "Withdrawn" ? "danger" :
+                           Model.EnrollmentStatus == "Deferred" ? "warning" : "default";
+
+    string paymentVariant = Model.PaymentStatus == "Paid" ? "success" :
+                            Model.PaymentStatus == "Partial" ? "warning" :
+                            Model.PaymentStatus == "Pending" ? "danger" :
+                            Model.PaymentStatus == "Refunded" ? "info" : "default";
+
+    decimal outstanding = Model.CourseFee - Model.AmountPaid;
+    bool isFullyPaid = outstanding <= 0;
+}
+
+<!-- Toast Notifications -->
+@if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+{
+    <div id="toastContainer" style="position:fixed;top:80px;right:20px;z-index:9999;min-width:340px;max-width:480px;">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="app-toast alert alert-success" role="alert">
+                <strong><i class="fa-solid fa-circle-check"></i> Success</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["SuccessMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="app-toast app-toast-error alert alert-danger" role="alert">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Error</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["ErrorMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+    </div>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-graduation-cap"></i> Enrollment Details</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            @customer.FullName &mdash; <span class="customer-code">@customer.CustomerCode</span>
+        </span>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <a href="@Url.Action("Index", new { customerId = customer.CustomerID })" class="btn btn-default">
+            <i class="fa-solid fa-arrow-left"></i> Back to Enrollments
+        </a>
+        <a href="@Url.Action("Edit", new { id = Model.EnrollmentID })" class="btn btn-primary">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Enrollment
+        </a>
+    </div>
+</div>
+
+<!-- ── Course Hero Card ── -->
+<div class="enrollment-hero mb-4">
+    <div class="enrollment-hero-left">
+        <div class="enrollment-hero-icon">
+            <i class="fa-solid fa-book-open"></i>
+        </div>
+        <div>
+            <h3 class="enrollment-hero-title">@Model.CourseName</h3>
+            @if (!string.IsNullOrEmpty(Model.CourseCode))
+            {
+                <span class="customer-code">@Model.CourseCode</span>
+            }
+            <div class="enrollment-hero-meta">
+                <span>
+                    <i class="fa-regular fa-calendar"></i>
+                    Enrolled @Model.EnrollmentDate.ToString("dd MMMM yyyy")
+                </span>
+                @if (Model.CourseStartDate.HasValue && Model.CourseEndDate.HasValue)
+                {
+                    <span>
+                        <i class="fa-solid fa-clock"></i>
+                        @Model.CourseStartDate.Value.ToString("dd MMM yyyy") &mdash; @Model.CourseEndDate.Value.ToString("dd MMM yyyy")
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="enrollment-hero-status">
+        <span class="badge badge-@statusVariant" style="font-size:0.9rem;padding:8px 18px;">
+            @Model.EnrollmentStatus
+        </span>
+        @if (Model.EnrollmentStatus == "Completed" && Model.CompletionDate.HasValue)
+        {
+            <div style="font-size:0.775rem;color:var(--color-muted);margin-top:6px;text-align:center;">
+                Completed @Model.CompletionDate.Value.ToString("dd MMM yyyy")
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- ── Left Column ── -->
+    <div class="col-md-8">
+
+        <!-- Financial Summary -->
+        <div class="content-card mb-3">
+            <div class="content-card-header">
+                <h4 class="mb-0"><i class="fa-solid fa-hand-holding-dollar"></i> Financial Summary</h4>
+            </div>
+            <div class="content-card-body">
+                <div class="row g-3">
+                    <div class="col-sm-3">
+                        <div class="finance-metric">
+                            <div class="finance-metric-label">Course Fee</div>
+                            <div class="finance-metric-value">R @Model.CourseFee.ToString("N2")</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="finance-metric finance-metric-paid">
+                            <div class="finance-metric-label">Amount Paid</div>
+                            <div class="finance-metric-value" style="color:var(--color-success);">
+                                R @Model.AmountPaid.ToString("N2")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="finance-metric @(isFullyPaid ? "finance-metric-paid" : "finance-metric-outstanding")">
+                            <div class="finance-metric-label">Outstanding</div>
+                            <div class="finance-metric-value" style="color:@(isFullyPaid ? "var(--color-success)" : "var(--color-danger)");">
+                                R @outstanding.ToString("N2")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="finance-metric">
+                            <div class="finance-metric-label">Payment Status</div>
+                            <div class="mt-1">
+                                <span class="badge badge-@paymentVariant">@Model.PaymentStatus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment progress bar -->
+                @{
+                    int payPercent = Model.CourseFee > 0
+                        ? (int)Math.Min(100, Math.Round(Model.AmountPaid / Model.CourseFee * 100))
+                        : 0;
+                }
+                <div class="payment-progress mt-3">
+                    <div class="payment-progress-header">
+                        <span style="font-size:0.8rem;font-weight:600;color:var(--color-muted);">Payment Progress</span>
+                        <span style="font-size:0.8rem;font-weight:700;color:var(--color-text);">@payPercent%</span>
+                    </div>
+                    <div class="payment-progress-bar">
+                        <div class="payment-progress-fill @(isFullyPaid ? "fill-complete" : payPercent > 0 ? "fill-partial" : "fill-empty")"
+                             style="width:@payPercent%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion & Grade (only when completed) -->
+        @if (Model.EnrollmentStatus == "Completed")
+        {
+            <div class="content-card mb-3">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-circle-check"></i> Completion Details</h4>
+                </div>
+                <div class="content-card-body">
+                    <div class="row g-3">
+                        @if (Model.CompletionDate.HasValue)
+                        {
+                            <div class="col-md-6">
+                                <div class="detail-section" style="border:none;">
+                                    <div class="detail-row" style="border:none;padding:0;">
+                                        <span class="detail-label">Completion Date</span>
+                                        <span class="detail-value" style="color:var(--color-success);font-weight:600;">
+                                            <i class="fa-solid fa-circle-check"></i>
+                                            @Model.CompletionDate.Value.ToString("dd MMMM yyyy")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Grade))
+                        {
+                            <div class="col-md-6">
+                                <div class="detail-section" style="border:none;">
+                                    <div class="detail-row" style="border:none;padding:0;">
+                                        <span class="detail-label">Grade</span>
+                                        <span style="font-size:1.6rem;font-weight:700;color:var(--color-primary);">
+                                            @Model.Grade
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Notes -->
+        @if (!string.IsNullOrEmpty(Model.Notes))
+        {
+            <div class="content-card">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-note-sticky"></i> Notes</h4>
+                </div>
+                <div class="content-card-body">
+                    <p style="margin:0;color:var(--color-text);white-space:pre-wrap;font-size:0.9rem;line-height:1.7;">@Model.Notes</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- ── Right Column ── -->
+    <div class="col-md-4">
+
+        <!-- Certificate card -->
+        @if (Model.CertificateIssued || Model.EnrollmentStatus == "Completed")
+        {
+            <div class="content-card mb-3">
+                <div class="content-card-header" style="border-bottom-color:var(--color-warning);">
+                    <h4 class="mb-0" style="color:var(--color-warning);">
+                        <i class="fa-solid fa-certificate"></i> Certificate
+                    </h4>
+                </div>
+                <div class="content-card-body">
+                    @if (Model.CertificateIssued)
+                    {
+                        <div class="certificate-issued-card">
+                            <i class="fa-solid fa-certificate certificate-icon"></i>
+                            <div>
+                                <div style="font-weight:700;color:var(--color-success);margin-bottom:3px;">
+                                    Certificate Issued
+                                </div>
+                                <div style="font-size:0.8rem;color:var(--color-muted);">
+                                    @(Model.CertificateIssueDate?.ToString("dd MMMM yyyy") ?? "Date not recorded")
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-default w-100 mt-3" disabled>
+                            <i class="fa-solid fa-download"></i> Download Certificate
+                            <span class="badge badge-default ms-1" style="font-size:0.65rem;">Coming Soon</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0" style="border-left-width:4px;">
+                            <i class="fa-solid fa-circle-info"></i>
+                            Certificate will be issued upon successful completion.
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Quick info card -->
+        <div class="content-card">
+            <div class="content-card-header">
+                <h4 class="mb-0"><i class="fa-solid fa-circle-info"></i> Enrollment Info</h4>
+            </div>
+            <div class="content-card-body p-0">
+                <div class="detail-row">
+                    <span class="detail-label">Enrollment ID</span>
+                    <span style="font-family:var(--font-mono);font-size:0.8rem;">@Model.EnrollmentID</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Enrolled On</span>
+                    <span class="detail-value">@Model.EnrollmentDate.ToString("dd MMM yyyy")</span>
+                </div>
+                @if (Model.CourseStartDate.HasValue)
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">Start Date</span>
+                        <span class="detail-value">@Model.CourseStartDate.Value.ToString("dd MMM yyyy")</span>
+                    </div>
+                }
+                @if (Model.CourseEndDate.HasValue)
+                {
+                    <div class="detail-row">
+                        <span class="detail-label">End Date</span>
+                        <span class="detail-value">@Model.CourseEndDate.Value.ToString("dd MMM yyyy")</span>
+                    </div>
+                }
+                <div class="detail-row" style="border-bottom:none;">
+                    <span class="detail-label">Status</span>
+                    <span class="badge badge-@statusVariant">@Model.EnrollmentStatus</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        /* ── Enrollment Hero ── */
+        .enrollment-hero {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: 22px 26px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .enrollment-hero-left {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            flex: 1;
+        }
+
+        .enrollment-hero-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .enrollment-hero-title {
+            margin: 0 0 6px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .enrollment-hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 8px;
+            font-size: 0.825rem;
+            color: var(--color-muted);
+        }
+
+            .enrollment-hero-meta span {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+        .enrollment-hero-status {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        /* ── Finance metrics ── */
+        .finance-metric {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            text-align: center;
+        }
+
+        .finance-metric-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--color-muted);
+            margin-bottom: 6px;
+        }
+
+        .finance-metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-text);
+            font-family: var(--font-mono);
+            letter-spacing: -0.5px;
+        }
+
+        /* ── Payment progress bar ── */
+        .payment-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .payment-progress-bar {
+            height: 8px;
+            background: var(--color-border);
+            border-radius: var(--radius-pill);
+            overflow: hidden;
+        }
+
+        .payment-progress-fill {
+            height: 100%;
+            border-radius: var(--radius-pill);
+            transition: width 0.6s var(--ease-out);
+        }
+
+        .fill-complete {
+            background: linear-gradient(90deg, var(--color-success), #5dbe96);
+        }
+
+        .fill-partial {
+            background: linear-gradient(90deg, var(--color-warning), #e8ab42);
+        }
+
+        .fill-empty {
+            background: var(--color-border);
+        }
+
+        /* ── Certificate card ── */
+        .certificate-issued-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--color-success-bg);
+            border: 1.5px solid rgba(46,158,107,0.2);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+        }
+
+        .certificate-icon {
+            font-size: 2rem;
+            color: var(--color-warning);
+            flex-shrink: 0;
+        }
+
+        /* ── Detail rows (reuse from details page) ── */
+        .detail-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 0.855rem;
+            gap: 12px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--color-muted);
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            min-width: 100px;
+        }
+
+        .detail-value {
+            color: var(--color-text);
+        }
+
+        /* Shared */
+        .customer-code {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .app-toast {
+            margin-bottom: 10px;
+            position: relative;
+        }
+    </style>
+
+    <script>
+        // Toast auto-dismiss
+        setTimeout(function () {
+            document.querySelectorAll('.app-toast:not(.app-toast-error)').forEach(function (el) {
+                el.style.transition = 'all 0.35s ease-in';
+                el.style.opacity = '0'; el.style.transform = 'translateX(120%)';
+                setTimeout(function () { el.remove(); }, 350);
+            });
+        }, 5000);
+
+        document.querySelectorAll('.app-toast-close').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var t = this.closest('.app-toast');
+                t.style.transition = 'all 0.3s ease-in';
+                t.style.opacity = '0'; t.style.transform = 'translateX(120%)';
+                setTimeout(function () { t.remove(); }, 300);
+            });
+        });
+    </script>
+}

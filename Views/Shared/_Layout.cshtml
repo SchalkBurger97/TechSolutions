@@ -3,24 +3,23 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <title>@ViewBag.Title - TechSolutions</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
-
 </head>
-<body class="app-theme">
+<body>
     <nav class="navbar navbar-expand-sm">
         <div class="container">
-            @Html.ActionLink("TechSolutions", "Index", "Home", new { area = "" }, new { @class = "navbar-brand me-4" })
-
+            <a href="@Url.Action("Index", "Home", new { area = "" })" class="navbar-brand">
+                Tech<span>Solutions</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
                     aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="mainNavbar">
-                <!-- Left side nav -->
+                <!-- Left nav -->
                 <ul class="navbar-nav me-auto mb-2 mb-sm-0">
                     <li class="nav-item">
                         @Html.ActionLink("Dashboard", "Index", "Home", null, new { @class = "nav-link" })
@@ -35,19 +34,19 @@
                         @Html.ActionLink("Reports", "Index", "Reports", null, new { @class = "nav-link" })
                     </li>
                 </ul>
-
-                <!-- Right side -->
-                <div class="d-flex">
+                <!-- Right side auth -->
+                <div class="d-flex align-items-center">
                     @Html.Partial("_LoginPartial")
                 </div>
             </div>
         </div>
     </nav>
+
     <div class="container body-content">
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - TechSolutions Customer Management System</p>
+            <p>&copy; @DateTime.Now.Year TechSolutions &mdash; Customer Management System</p>
         </footer>
     </div>
 

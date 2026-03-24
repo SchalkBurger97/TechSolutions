@@ -1,0 +1,660 @@
+﻿@model List<TechSolutions.Models.PaymentInformation>
+
+@{
+    ViewBag.Title = "Payment Methods";
+    var customer = ViewBag.Customer as TechSolutions.Models.Customer;
+    var activeCount = Model.Count(p => p.IsActive);
+    var expiredCount = Model.Count(p => p.IsExpired);
+    var expiringSoon = Model.Count(p => p.IsExpiringSoon);
+    var primaryMethod = Model.FirstOrDefault(p => p.IsPrimary);
+}
+
+<!-- Toast Notifications -->
+@if (TempData["SuccessMessage"] != null || TempData["ErrorMessage"] != null)
+{
+    <div id="toastContainer" style="position:fixed;top:80px;right:20px;z-index:9999;min-width:340px;max-width:480px;">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="app-toast alert alert-success" role="alert">
+                <strong><i class="fa-solid fa-circle-check"></i> Success</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["SuccessMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="app-toast app-toast-error alert alert-danger" role="alert">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Error</strong>
+                <p class="mb-0 mt-1" style="font-size:0.825rem;">@TempData["ErrorMessage"]</p>
+                <button class="app-toast-close" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:inherit;opacity:0.6;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        }
+    </div>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-credit-card"></i> Payment Methods</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            @customer.FullName &mdash; <span class="customer-code">@customer.CustomerCode</span>
+        </span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <a href="@Url.Action("Details", "Customer", new { id = customer.CustomerID })" class="btn btn-default">
+            <i class="fa-solid fa-arrow-left"></i> Back to Profile
+        </a>
+        <a href="@Url.Action("Create", new { customerId = customer.CustomerID })" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add Payment Method
+        </a>
+    </div>
+</div>
+
+<!-- Security Notice -->
+<div class="alert alert-danger mb-4" style="border-left-width:4px;">
+    <i class="fa-solid fa-lock"></i>
+    <strong>Sensitive Financial Data.</strong>
+    Card and account numbers are encrypted at rest. Revealing a number requires confirmation and is logged for audit purposes.
+</div>
+
+<!-- Summary Stats -->
+@if (Model.Count > 0)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-3">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-card-label">Total Methods</div>
+                <div class="stat-card-value stat-card-value-md">@Model.Count</div>
+                <i class="fa-solid fa-credit-card card-icon"></i>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="stat-card stat-card-success">
+                <div class="stat-card-label">Active</div>
+                <div class="stat-card-value stat-card-value-md">@activeCount</div>
+                <i class="fa-solid fa-circle-check card-icon"></i>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-card-label">Expiring Soon</div>
+                <div class="stat-card-value stat-card-value-md">@expiringSoon</div>
+                <i class="fa-solid fa-clock card-icon"></i>
+            </div>
+        </div>
+        <div class="col-sm-3">
+            <div class="stat-card stat-card-danger">
+                <div class="stat-card-label">Expired</div>
+                <div class="stat-card-value stat-card-value-md">@expiredCount</div>
+                <i class="fa-solid fa-circle-xmark card-icon"></i>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Payment Cards Grid -->
+@if (Model.Count > 0)
+{
+    <div class="row g-3">
+        @foreach (var payment in Model)
+        {
+            bool isBankAccount = payment.PaymentMethodType == "Bank Account";
+            bool isExpired = payment.IsExpired;
+            bool isExpiringSoon = payment.IsExpiringSoon;
+
+            // Brand colours
+            string gradStart = "#475569";
+            string gradEnd = "#1e293b";
+
+            if (isBankAccount)
+            {
+                gradStart = "#1a6b3a";
+                gradEnd = "#0f4225";
+            }
+            else if (payment.CardType == "Visa")
+            {
+                gradStart = "#1434CB";
+                gradEnd = "#0a1e6e";
+            }
+            else if (payment.CardType == "Mastercard")
+            {
+                gradStart = "#EB001B";
+                gradEnd = "#c41515";
+            }
+
+            if (!payment.IsActive)
+            {
+                gradStart = "#6b7c8d";
+                gradEnd = "#4a5568";
+            }
+
+            <div class="col-md-6 col-lg-4">
+                <div class="payment-card" style="background: linear-gradient(135deg, @gradStart 0%, @gradEnd 100%);">
+
+                    <!-- Top row: status badges + brand -->
+                    <div class="payment-card-top">
+                        <div class="payment-card-badges">
+                            @if (payment.IsPrimary)
+                            {
+                                <span class="payment-badge payment-badge-primary">
+                                    <i class="fa-solid fa-star"></i> Primary
+                                </span>
+                            }
+                            @if (!payment.IsActive)
+                            {
+                                <span class="payment-badge payment-badge-inactive">Inactive</span>
+                            }
+                            @if (isExpired)
+                            {
+                                <span class="payment-badge payment-badge-expired">Expired</span>
+                            }
+                            else if (isExpiringSoon)
+                            {
+                                <span class="payment-badge payment-badge-expiring">Expiring Soon</span>
+                            }
+                        </div>
+                        <div class="payment-card-brand">
+                            @if (!isBankAccount && payment.CardType == "Visa")
+                            {
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg"
+                                     alt="Visa" style="height:24px;filter:brightness(0) invert(1);opacity:0.85;" />
+                            }
+                            else if (!isBankAccount && payment.CardType == "Mastercard")
+                            {
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                                     alt="Mastercard" style="height:26px;filter:brightness(0) invert(1);opacity:0.85;" />
+                            }
+                            else if (isBankAccount)
+                            {
+                                <i class="fa-solid fa-building-columns payment-brand-icon"></i>
+                            }
+                            else
+                            {
+                                <i class="fa-solid fa-credit-card payment-brand-icon"></i>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Card / Account Number -->
+                    <div class="payment-card-number"
+                         data-payment-id="@payment.PaymentID"
+                         data-last4="@(isBankAccount ? payment.AccountLast4Digits : payment.CardLast4Digits)"
+                         data-is-bank="@isBankAccount.ToString().ToLower()">
+                        <button type="button" class="payment-reveal-btn" title="Click to reveal number">
+                            <i class="fa-solid fa-lock payment-lock-icon"></i>
+                        </button>
+                        <span class="payment-number-display">
+                            @if (isBankAccount)
+                            {
+                                <text>•••• @payment.AccountLast4Digits</text>
+                            }
+                            else
+                            {
+                                <text>•••• •••• •••• @payment.CardLast4Digits</text>
+                            }
+                        </span>
+                    </div>
+
+                    <!-- Card holder / Bank name -->
+                    <div class="payment-card-holder">
+                        @if (isBankAccount)
+                        {
+                            @payment.BankName
+                        }
+                        else if (!string.IsNullOrEmpty(payment.CardHolderName))
+                        {
+                            @payment.CardHolderName
+                        }
+                    </div>
+
+                    <!-- Expiry / Account type -->
+                    <div class="payment-card-meta">
+                        @if (!isBankAccount && payment.CardExpiryDate.HasValue)
+                        {
+                            <span>Expires @payment.CardExpiryDate.Value.ToString("MM/yy")</span>
+                        }
+                        else if (isBankAccount)
+                        {
+                            <span>@payment.AccountType</span>
+                            if (!string.IsNullOrEmpty(payment.BranchCode))
+                            {
+                                <span class="ms-3">Branch: @payment.BranchCode</span>
+                            }
+                        }
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="payment-card-actions">
+                        @if (!payment.IsPrimary)
+                        {
+                            using (Html.BeginForm("SetPrimary", "Payment", FormMethod.Post, new { @class = "d-inline" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@payment.PaymentID" />
+                                <input type="hidden" name="customerId" value="@customer.CustomerID" />
+                                <button type="submit" class="payment-action-btn payment-action-ghost">
+                                    <i class="fa-regular fa-star"></i> Set Primary
+                                </button>
+                            }
+                        }
+                        <a href="@Url.Action("Edit", new { id = payment.PaymentID })"
+                           class="payment-action-btn payment-action-ghost">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </a>
+                        <button type="button"
+                                class="payment-action-btn payment-action-danger"
+                                onclick="confirmDelete(@payment.PaymentID, '@payment.PaymentMethodType', @customer.CustomerID)">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <i class="fa-solid fa-credit-card empty-state-icon"></i>
+        <h5>No payment methods yet</h5>
+        <p>No payment methods have been added for this customer.</p>
+        <a href="@Url.Action("Create", new { customerId = customer.CustomerID })" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add First Payment Method
+        </a>
+    </div>
+}
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius-md);border:1px solid var(--color-border);overflow:hidden;">
+            <div class="modal-header" style="background:var(--color-danger-bg);border-bottom:1px solid rgba(192,57,43,0.2);padding:16px 20px;">
+                <h5 class="modal-title" style="color:var(--color-danger);font-weight:600;margin:0;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete
+                </h5>
+            </div>
+            <div class="modal-body" style="padding:20px;">
+                <p id="deleteMessage" class="mb-0" style="font-size:0.9rem;"></p>
+            </div>
+            <div class="modal-footer" style="padding:12px 20px;border-top:1px solid var(--color-border);gap:8px;">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fa-solid fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Confirm Modal -->
+<div class="modal fade" id="revealModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius-md);border:1px solid var(--color-border);overflow:hidden;">
+            <div class="modal-header" style="background:var(--color-warning-bg);border-bottom:1px solid rgba(212,142,16,0.2);padding:16px 20px;">
+                <h5 class="modal-title" style="color:var(--color-warning);font-weight:600;margin:0;">
+                    <i class="fa-solid fa-shield-halved"></i> Security Warning
+                </h5>
+            </div>
+            <div class="modal-body" style="padding:20px;">
+                <p class="mb-0" style="font-size:0.9rem;">
+                    You are about to view sensitive payment information.
+                    This action will be <strong>logged for audit purposes</strong>.
+                    Do you want to continue?
+                </p>
+            </div>
+            <div class="modal-footer" style="padding:12px 20px;border-top:1px solid var(--color-border);gap:8px;">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirmRevealBtn">
+                    <i class="fa-solid fa-eye"></i> Reveal Number
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="customerId" id="deleteCustomerId" />
+</form>
+
+@section Scripts {
+    <style>
+        /* ── Payment Card ── */
+        .payment-card {
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+            min-height: 220px;
+        }
+
+            .payment-card::before {
+                content: '';
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                width: 160px;
+                height: 160px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.05);
+                pointer-events: none;
+            }
+
+            .payment-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-lg);
+            }
+
+        /* Top row */
+        .payment-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .payment-card-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .payment-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
+        }
+
+        .payment-badge-primary {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .payment-badge-inactive {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .payment-badge-expired {
+            background: rgba(192,57,43,0.85);
+        }
+
+        .payment-badge-expiring {
+            background: rgba(212,142,16,0.85);
+        }
+
+        .payment-card-brand {
+            flex-shrink: 0;
+        }
+
+        .payment-brand-icon {
+            font-size: 1.6rem;
+            opacity: 0.7;
+        }
+
+        /* Number row */
+        .payment-card-number {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        .payment-reveal-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: var(--radius-sm);
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+            .payment-reveal-btn:hover {
+                background: rgba(255,255,255,0.28);
+            }
+
+            .payment-reveal-btn.revealed {
+                background: rgba(46,158,107,0.4);
+                border-color: rgba(46,158,107,0.5);
+            }
+
+        .payment-lock-icon {
+            pointer-events: none;
+        }
+
+        /* Holder */
+        .payment-card-holder {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+            flex: 1;
+        }
+
+        /* Meta */
+        .payment-card-meta {
+            font-size: 0.78rem;
+            opacity: 0.75;
+            margin-bottom: 16px;
+        }
+
+        /* Actions */
+        .payment-card-actions {
+            display: flex;
+            gap: 6px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            margin-top: auto;
+            flex-wrap: wrap;
+        }
+
+        .payment-action-btn {
+            flex: 1;
+            padding: 7px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .payment-action-ghost {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.25);
+            color: #fff;
+        }
+
+            .payment-action-ghost:hover {
+                background: rgba(255,255,255,0.28);
+                color: #fff;
+            }
+
+        .payment-action-danger {
+            background: rgba(192,57,43,0.7);
+            border-color: rgba(192,57,43,0.4);
+            color: #fff;
+        }
+
+            .payment-action-danger:hover {
+                background: rgba(192,57,43,1);
+                color: #fff;
+            }
+
+        /* Shared */
+        .customer-code {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--color-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3.5rem;
+            opacity: 0.18;
+            display: block;
+            margin-bottom: 20px;
+            color: var(--color-primary);
+        }
+
+        .empty-state h5 {
+            color: var(--color-text);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+        }
+
+        .app-toast {
+            margin-bottom: 10px;
+            position: relative;
+        }
+    </style>
+
+    <script>
+        // ── Reveal card number ──
+        var pendingRevealEl = null;
+
+        document.querySelectorAll('.payment-card-number').forEach(function (el) {
+            el.addEventListener('click', function () {
+                var btn = this.querySelector('.payment-reveal-btn');
+
+                // If already revealed — hide it immediately, no modal needed
+                if (btn.classList.contains('revealed')) {
+                    var last4 = this.dataset.last4;
+                    var isBank = this.dataset.isBank === 'true';
+                    var display = this.querySelector('.payment-number-display');
+                    var icon = this.querySelector('.payment-lock-icon');
+
+                    display.textContent = isBank ? '•••• ' + last4 : '•••• •••• •••• ' + last4;
+                    icon.className = 'fa-solid fa-lock payment-lock-icon';
+                    btn.classList.remove('revealed');
+                    return;
+                }
+
+                // Not yet revealed — show security modal
+                pendingRevealEl = this;
+                var modal = new bootstrap.Modal(document.getElementById('revealModal'));
+                modal.show();
+            });
+        });
+
+    document.getElementById('confirmRevealBtn').addEventListener('click', function () {
+        bootstrap.Modal.getInstance(document.getElementById('revealModal')).hide();
+        if (!pendingRevealEl) return;
+
+        var el       = pendingRevealEl;
+        var id       = el.dataset.paymentId;
+        var last4    = el.dataset.last4;
+        var isBank   = el.dataset.isBank === 'true';
+        var display  = el.querySelector('.payment-number-display');
+        var btn      = el.querySelector('.payment-reveal-btn');
+        var icon     = el.querySelector('.payment-lock-icon');
+
+        fetch('@Url.Action("RevealCardNumber", "Payment")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'id=' + id + '&__RequestVerificationToken=' +
+                  encodeURIComponent(document.querySelector('input[name="__RequestVerificationToken"]').value)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                display.textContent = data.fullNumber;
+                icon.className = 'fa-solid fa-lock-open payment-lock-icon';
+                btn.classList.add('revealed');
+
+                // Auto-hide after 30 seconds
+                setTimeout(function () {
+                    if (btn.classList.contains('revealed')) {
+                        display.textContent = isBank ? '•••• ' + last4 : '•••• •••• •••• ' + last4;
+                        icon.className = 'fa-solid fa-lock payment-lock-icon';
+                        btn.classList.remove('revealed');
+                    }
+                }, 30000);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(function () { alert('Failed to retrieve number. Please try again.'); });
+
+        pendingRevealEl = null;
+    });
+
+    // ── Delete modal ──
+    function confirmDelete(paymentId, paymentType, customerId) {
+        document.getElementById('deleteMessage').textContent =
+            'Are you sure you want to delete this ' + paymentType + '? This action cannot be undone.';
+        document.getElementById('deleteCustomerId').value = customerId;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+
+        document.getElementById('confirmDeleteBtn').onclick = function () {
+            var form = document.getElementById('deleteForm');
+            form.action = '@Url.Action("Delete", "Payment")' + '/' + paymentId;
+            form.submit();
+        };
+    }
+
+    // ── Toast auto-dismiss ──
+    setTimeout(function () {
+        document.querySelectorAll('.app-toast:not(.app-toast-error)').forEach(function (el) {
+            el.style.transition = 'all 0.35s ease-in';
+            el.style.opacity = '0'; el.style.transform = 'translateX(120%)';
+            setTimeout(function () { el.remove(); }, 350);
+        });
+    }, 5000);
+
+    document.querySelectorAll('.app-toast-close').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var t = this.closest('.app-toast');
+            t.style.transition = 'all 0.3s ease-in';
+            t.style.opacity = '0'; t.style.transform = 'translateX(120%)';
+            setTimeout(function () { t.remove(); }, 300);
+        });
+    });
+    </script>
+}

@@ -1,72 +1,222 @@
 ﻿@model TechSolutions.Models.ManageLoginsViewModel
 @using Microsoft.Owin.Security
 @{
-    ViewBag.Title = "Manage your external logins";
+    ViewBag.Title = "External Logins";
+    var loginProviders = Context.GetOwinContext().Authentication.GetExternalAuthenticationTypes();
 }
 
-<main aria-labelledby="title">
-<h2 id="title">@ViewBag.Title.</h2>
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-link"></i> External Logins</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            Manage external providers linked to your account
+        </span>
+    </div>
+    <a href="@Url.Action("Index", "Manage")" class="btn btn-default">
+        <i class="fa-solid fa-arrow-left"></i> Back to Settings
+    </a>
+</div>
 
-    <p class="text-success">@ViewBag.StatusMessage</p>
-    @{
-        var loginProviders = Context.GetOwinContext().Authentication.GetExternalAuthenticationTypes();
-        if (loginProviders.Count() == 0) {
-            <div>
-                <p>
-                    There are no external authentication services configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=313242">this article</a>
-                    for details on setting up this ASP.NET application to support logging in via external services.
-                </p>
-            </div>
-        }
-        else
+@if (!string.IsNullOrEmpty(ViewBag.StatusMessage))
+{
+    <div class="alert alert-success mb-4" style="border-left-width:4px;">
+        <i class="fa-solid fa-circle-check"></i> @ViewBag.StatusMessage
+    </div>
+}
+
+@if (!loginProviders.Any())
+{
+    <!-- No providers configured -->
+    <div class="content-card">
+        <div class="content-card-body" style="padding:48px 20px;text-align:center;">
+            <i class="fa-solid fa-link" style="font-size:2.5rem;opacity:0.15;color:var(--color-primary);display:block;margin-bottom:16px;"></i>
+            <h5 style="color:var(--color-text);font-weight:600;margin-bottom:8px;">No External Providers Configured</h5>
+            <p style="font-size:0.875rem;color:var(--color-muted);margin-bottom:20px;">
+                No external authentication services are set up for this application.
+            </p>
+            <a href="https://go.microsoft.com/fwlink/?LinkId=313242" target="_blank" class="btn btn-default btn-sm">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Learn how to configure external logins
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+
+        <!-- Current linked accounts -->
+        @if (Model.CurrentLogins.Count > 0)
         {
-            if (Model.CurrentLogins.Count > 0)
-            {
-                <h4>Registered Logins</h4>
-                <table class="table">
-                    <tbody>
+            <div class="col-md-6">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h4 class="mb-0"><i class="fa-solid fa-circle-check"></i> Linked Accounts</h4>
+                    </div>
+                    <div class="content-card-body p-0">
                         @foreach (var account in Model.CurrentLogins)
                         {
-                            <tr>
-                                <td>@account.LoginProvider</td>
-                                <td>
-                                    @if (ViewBag.ShowRemoveButton)
+                            <div class="external-login-row">
+                                <div class="external-login-icon">
+                                    @if (account.LoginProvider.ToLower() == "google")
                                     {
-                                        using (Html.BeginForm("RemoveLogin", "Manage"))
-                                        {
-                                            @Html.AntiForgeryToken()
-                                            <div>
-                                                @Html.Hidden("loginProvider", account.LoginProvider)
-                                                @Html.Hidden("providerKey", account.ProviderKey)
-                                                <input type="submit" class="btn btn-outline-dark" value="Remove" title="Remove this @account.LoginProvider login from your account" />
-                                            </div>
-                                        }
+                                        <i class="fa-brands fa-google" style="color:#EA4335;"></i>
+                                    }
+                                    else if (account.LoginProvider.ToLower() == "microsoft")
+                                    {
+                                        <i class="fa-brands fa-microsoft" style="color:#00A4EF;"></i>
+                                    }
+                                    else if (account.LoginProvider.ToLower() == "facebook")
+                                    {
+                                        <i class="fa-brands fa-facebook" style="color:#1877F2;"></i>
                                     }
                                     else
                                     {
-                                        @: &nbsp;
+                                        <i class="fa-solid fa-link" style="color:var(--color-primary);"></i>
                                     }
-                                </td>
-                            </tr>
+                                </div>
+                                <div class="external-login-info">
+                                    <strong>@account.LoginProvider</strong>
+                                    <small>Linked to your account</small>
+                                </div>
+                                @if (ViewBag.ShowRemoveButton)
+                                {
+                                    using (Html.BeginForm("RemoveLogin", "Manage", FormMethod.Post, new { @class = "d-inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("loginProvider", account.LoginProvider)
+                                        @Html.Hidden("providerKey", account.ProviderKey)
+                                        <button type="submit" class="btn btn-sm btn-danger-outline"
+                                                title="Remove @account.LoginProvider login">
+                                            <i class="fa-solid fa-unlink"></i> Remove
+                                        </button>
+                                    }
+                                }
+                            </div>
                         }
-                    </tbody>
-                </table>
-            }
-            if (Model.OtherLogins.Count > 0)
-            {
-                using (Html.BeginForm("LinkLogin", "Manage"))
-                {
-                    @Html.AntiForgeryToken()
-                    <div id="socialLoginList">
-                    <p>
-                        @foreach (AuthenticationDescription p in Model.OtherLogins)
-                        {
-                            <button type="submit" class="btn btn-default" id="@p.AuthenticationType" name="provider" value="@p.AuthenticationType" title="Log in using your @p.Caption account">@p.AuthenticationType</button>
-                        }
-                    </p>
                     </div>
-                }
-            }
+                </div>
+            </div>
         }
-    }
-</main>
+
+        <!-- Available providers to link -->
+        @if (Model.OtherLogins.Count > 0)
+        {
+            <div class="col-md-6">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h4 class="mb-0"><i class="fa-solid fa-plus"></i> Link Another Account</h4>
+                    </div>
+                    <div class="content-card-body">
+                        @using (Html.BeginForm("LinkLogin", "Manage", FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            <p style="font-size:0.85rem;color:var(--color-muted);margin-bottom:16px;">
+                                Link an external provider to sign in without a password.
+                            </p>
+                            foreach (AuthenticationDescription p in Model.OtherLogins)
+                            {
+                                <button type="submit" class="btn btn-default w-100 mb-2 external-link-btn"
+                                        name="provider" value="@p.AuthenticationType"
+                                        title="Link your @p.Caption account">
+                                    @if (p.AuthenticationType.ToLower() == "google")
+                                    {
+                                        <i class="fa-brands fa-google" style="color:#EA4335;"></i>
+                                    }
+                                    else if (p.AuthenticationType.ToLower() == "microsoft")
+                                    {
+                                        <i class="fa-brands fa-microsoft" style="color:#00A4EF;"></i>
+                                    }
+                                    else if (p.AuthenticationType.ToLower() == "facebook")
+                                    {
+                                        <i class="fa-brands fa-facebook" style="color:#1877F2;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fa-solid fa-link"></i>
+                                    }
+                                    Link @p.AuthenticationType
+                                </button>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <style>
+        .external-login-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+            .external-login-row:last-child {
+                border-bottom: none;
+            }
+
+        .external-login-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .external-login-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+            .external-login-info strong {
+                font-size: 0.875rem;
+                color: var(--color-text);
+            }
+
+            .external-login-info small {
+                font-size: 0.775rem;
+                color: var(--color-muted);
+            }
+
+        .btn-danger-outline {
+            background: var(--color-danger-bg);
+            color: var(--color-danger);
+            border: 1.5px solid rgba(192,57,43,0.2);
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+            .btn-danger-outline:hover {
+                background: var(--color-danger);
+                color: #fff;
+            }
+
+        .external-link-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+    </style>
+}

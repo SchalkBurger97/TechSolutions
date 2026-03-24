@@ -1,0 +1,980 @@
+﻿@{
+    ViewBag.Title = "Data Quality";
+
+    // Only simple primitives read here — all complex data
+    // was pre-serialized to JSON strings in the controller
+    bool hasData = ViewBag.HasData ?? false;
+    int totalCustomers = ViewBag.TotalCustomers ?? 0;
+    double avgQuality = ViewBag.AvgQuality ?? 0.0;
+    double avgRisk = ViewBag.AvgRisk ?? 0.0;
+    int fullyComplete = ViewBag.FullyComplete ?? 0;
+    int criticalCount = ViewBag.CriticalCount ?? 0;
+    int highQ = ViewBag.HighQualityCount ?? 0;
+    int medQ = ViewBag.MedQualityCount ?? 0;
+    int riskLow = ViewBag.RiskLow ?? 0;
+    int riskMed = ViewBag.RiskMed ?? 0;
+    int riskHigh = ViewBag.RiskHigh ?? 0;
+    int activeCount = ViewBag.ActiveCount ?? 0;
+    int inactiveCount = ViewBag.InactiveCount ?? 0;
+    double docCoverage = ViewBag.DocCoverage ?? 0.0;
+    int docsVerified = ViewBag.DocsVerified ?? 0;
+    int docsExpired = ViewBag.DocsExpired ?? 0;
+    int docsExpiringSoon = ViewBag.DocsExpiringSoon ?? 0;
+    double clearCoverage = ViewBag.ClearCoverage ?? 0.0;
+    int clearApproved = ViewBag.ClearApproved ?? 0;
+    int clearPending = ViewBag.ClearPending ?? 0;
+    int clearRejected = ViewBag.ClearRejected ?? 0;
+    double payCoverage = ViewBag.PayCoverage ?? 0.0;
+    int payExpired = ViewBag.PayExpired ?? 0;
+    int payExpiringSoon = ViewBag.PayExpiringSoon ?? 0;
+    int enrolActive = ViewBag.EnrolActive ?? 0;
+    int enrolCompleted = ViewBag.EnrolCompleted ?? 0;
+    int enrolWithdrawn = ViewBag.EnrolWithdrawn ?? 0;
+    double enrolPaidPct = ViewBag.EnrolPaidPct ?? 0.0;
+    decimal enrolTotalPaid = ViewBag.EnrolTotalPaid ?? 0m;
+    decimal enrolOutstanding = ViewBag.EnrolOutstanding ?? 0m;
+
+    string qualVariant = avgQuality >= 80 ? "success" : avgQuality >= 60 ? "warning" : "danger";
+    string riskVariant = avgRisk < 30 ? "success" : avgRisk < 60 ? "warning" : "danger";
+
+    double docVariantPct = docCoverage >= 70 ? 1.0 : 0.0;
+    double clearVariantPct = clearCoverage >= 70 ? 1.0 : 0.0;
+    double payVariantPct = enrolPaidPct >= 80 ? 1.0 : 0.0;
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2><i class="fa-solid fa-chart-bar"></i> Data Quality Dashboard</h2>
+        <span class="text-muted" style="font-size:0.875rem;">
+            System-wide health analytics &mdash; last refreshed
+            <span id="lastRefreshed" style="font-weight:600;color:var(--color-primary);">@ViewBag.LastRefreshed</span>
+        </span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>Live</span>
+        </div>
+        <a href="@Url.Action("Index", "Customer")" class="btn btn-default">
+            <i class="fa-solid fa-users"></i> View Customers
+        </a>
+    </div>
+</div>
+
+@if (!hasData)
+{
+    <div class="empty-state" style="padding:80px 20px;">
+        <i class="fa-solid fa-chart-bar empty-state-icon"></i>
+        <h5>No data to analyse yet</h5>
+        <p>Add some customers to start seeing quality analytics.</p>
+        <a href="@Url.Action("Create", "Customer")" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add First Customer
+        </a>
+    </div>
+}
+else
+{
+    <!-- ── Live Metric Strip ── -->
+    <div class="live-strip mb-4">
+        <div class="live-metric">
+            <span class="live-metric-value" id="lm-total">@totalCustomers</span>
+            <span class="live-metric-label">Total Customers</span>
+        </div>
+        <div class="live-strip-divider"></div>
+        <div class="live-metric">
+            <span class="live-metric-value" id="lm-quality" style="color:var(--color-@qualVariant);">@(avgQuality)%</span>
+            <span class="live-metric-label">Avg Quality</span>
+        </div>
+        <div class="live-strip-divider"></div>
+        <div class="live-metric">
+            <span class="live-metric-value" id="lm-new-today" style="color:var(--color-primary);">—</span>
+            <span class="live-metric-label">Added Today</span>
+        </div>
+        <div class="live-strip-divider"></div>
+        <div class="live-metric">
+            <span class="live-metric-value" id="lm-critical" style="color:var(--color-danger);">@criticalCount</span>
+            <span class="live-metric-label">Critical (&lt;40%)</span>
+        </div>
+        <div class="live-strip-divider"></div>
+        <div class="live-metric">
+            <span class="live-metric-value" id="lm-pending" style="color:var(--color-warning);">@clearPending</span>
+            <span class="live-metric-label">Pending Clearances</span>
+        </div>
+        <div class="live-strip-divider"></div>
+        <div class="live-metric">
+            <span class="live-metric-value" id="lm-expired-docs" style="color:var(--color-danger);">@docsExpired</span>
+            <span class="live-metric-label">Expired Docs</span>
+        </div>
+    </div>
+
+    <!-- ── Row 1: System Health Summary ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="content-card">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-trophy"></i> System Health Summary</h4>
+                </div>
+                <div class="content-card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="summary-kpi summary-kpi-@qualVariant">
+                                <i class="fa-solid fa-chart-line summary-kpi-icon"></i>
+                                <div class="summary-kpi-value">@(avgQuality)%</div>
+                                <div class="summary-kpi-label">Avg Quality Score</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-kpi summary-kpi-@riskVariant">
+                                <i class="fa-solid fa-shield-halved summary-kpi-icon"></i>
+                                <div class="summary-kpi-value">@(avgRisk.ToString("F1"))</div>
+                                <div class="summary-kpi-label">Avg Risk Score</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-kpi summary-kpi-success">
+                                <i class="fa-solid fa-circle-check summary-kpi-icon"></i>
+                                <div class="summary-kpi-value">@fullyComplete</div>
+                                <div class="summary-kpi-label">100% Complete</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-kpi summary-kpi-@(docCoverage >= 70 ? "success" : "warning")">
+                                <i class="fa-solid fa-id-card summary-kpi-icon"></i>
+                                <div class="summary-kpi-value">@(docCoverage)%</div>
+                                <div class="summary-kpi-label">Doc Coverage</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-kpi summary-kpi-@(clearCoverage >= 70 ? "success" : "warning")">
+                                <i class="fa-solid fa-shield-halved summary-kpi-icon"></i>
+                                <div class="summary-kpi-value">@(clearCoverage)%</div>
+                                <div class="summary-kpi-label">Clearance Coverage</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="summary-kpi summary-kpi-@(enrolPaidPct >= 80 ? "success" : "warning")">
+                                <i class="fa-solid fa-hand-holding-dollar summary-kpi-icon"></i>
+                                <div class="summary-kpi-value">@(enrolPaidPct)%</div>
+                                <div class="summary-kpi-label">Fee Collection Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Row 2: Coverage Gauges ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="content-card text-center">
+                <div class="content-card-body">
+                    <div class="gauge-wrap">
+                        <canvas id="gaugeDoc" width="160" height="160"></canvas>
+                        <div class="gauge-label">
+                            <div class="gauge-value">@(docCoverage)%</div>
+                            <div class="gauge-sub">ID Document<br>Coverage</div>
+                        </div>
+                    </div>
+                    <div class="gauge-detail mt-3">
+                        <span class="badge badge-success">@docsVerified verified</span>
+                        <span class="badge badge-danger">@docsExpired expired</span>
+                        <span class="badge badge-warning">@docsExpiringSoon expiring</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="content-card text-center">
+                <div class="content-card-body">
+                    <div class="gauge-wrap">
+                        <canvas id="gaugeClear" width="160" height="160"></canvas>
+                        <div class="gauge-label">
+                            <div class="gauge-value">@(clearCoverage)%</div>
+                            <div class="gauge-sub">Medical<br>Clearance</div>
+                        </div>
+                    </div>
+                    <div class="gauge-detail mt-3">
+                        <span class="badge badge-success">@clearApproved approved</span>
+                        <span class="badge badge-warning">@clearPending pending</span>
+                        <span class="badge badge-danger">@clearRejected rejected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="content-card text-center">
+                <div class="content-card-body">
+                    <div class="gauge-wrap">
+                        <canvas id="gaugePay" width="160" height="160"></canvas>
+                        <div class="gauge-label">
+                            <div class="gauge-value">@(payCoverage)%</div>
+                            <div class="gauge-sub">Payment<br>Coverage</div>
+                        </div>
+                    </div>
+                    <div class="gauge-detail mt-3">
+                        <span class="badge badge-danger">@payExpired expired</span>
+                        <span class="badge badge-warning">@payExpiringSoon expiring soon</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Row 3: Quality Trend + Risk Distribution ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-chart-line"></i> Quality Score Trend — Last 6 Months</h4>
+                </div>
+                <div class="content-card-body">
+                    <canvas id="trendChart" height="90"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Row 4: Field Completion + Score Histogram ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-7">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-list-check"></i> Field Completion Rates</h4>
+                </div>
+                <div class="content-card-body">
+                    <canvas id="fieldChart" height="130"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-chart-bar"></i> Score Distribution</h4>
+                </div>
+                <div class="content-card-body">
+                    <canvas id="histogramChart" height="150"></canvas>
+                    <div class="histogram-summary mt-3">
+                        <div class="hs-item hs-success">
+                            <strong>@highQ</strong>
+                            <span>Excellent (80–100%)</span>
+                        </div>
+                        <div class="hs-item hs-warning">
+                            <strong>@medQ</strong>
+                            <span>Moderate (60–79%)</span>
+                        </div>
+                        <div class="hs-item hs-danger">
+                            <strong>@criticalCount</strong>
+                            <span>Poor (&lt;60%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Row 5: Quality by Type + Enrollment Financial ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-12">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-layer-group"></i> Quality by Customer Type</h4>
+                </div>
+                <div class="content-card-body">
+                    <canvas id="typeChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Row 6: Active vs Inactive + System Health Summary ── -->
+    <div class="row g-3 mb-3 align-items-stretch">
+        <div class="col-md-6">
+            <div class="content-card h-100 d-flex flex-column">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-toggle-on"></i> Active vs Inactive</h4>
+                </div>
+                <div class="content-card-body d-flex align-items-center gap-4 flex-grow-1">
+                    <canvas id="activeChart" width="110" height="110" style="flex-shrink:0;"></canvas>
+                    <div class="doughnut-legend flex-grow-1">
+                        <div class="dl-item"><span class="dl-dot" style="background:#0477bf;"></span>Active (@activeCount)</div>
+                        <div class="dl-item"><span class="dl-dot" style="background:#d6e4ef;"></span>Inactive (@inactiveCount)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="content-card h-100 d-flex flex-column">
+                <div class="content-card-header">
+                    <h4 class="mb-0"><i class="fa-solid fa-hand-holding-dollar"></i> Enrollment Financial Health</h4>
+                </div>
+                <div class="content-card-body d-flex flex-column gap-4 flex-grow-1">
+                    <div class="fin-bar-wrap mb-3">
+                        <div class="fin-bar-header">
+                            <span style="font-size:0.78rem;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:0.5px;">Fee Collection Rate</span>
+                            <span style="font-size:0.9rem;font-weight:700;color:var(--color-primary);">@(enrolPaidPct)%</span>
+                        </div>
+                        <div class="fin-bar-track">
+                            <div class="fin-bar-paid" style="width:@(enrolPaidPct)%"></div>
+                            <div class="fin-bar-unpaid" style="width:@(100 - enrolPaidPct)%"></div>
+                        </div>
+                        <div class="fin-bar-legend">
+                            <span><i class="fa-solid fa-circle" style="color:var(--color-success);font-size:0.6rem;"></i> Paid: R @(enrolTotalPaid.ToString("N0"))</span>
+                            <span><i class="fa-solid fa-circle" style="color:var(--color-danger);font-size:0.6rem;"></i> Outstanding: R @(enrolOutstanding.ToString("N0"))</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-4 flex-grow-1">
+                        <canvas id="enrolStatusChart" width="120" height="120" style="flex-shrink:0;"></canvas>
+                        <div class="doughnut-legend flex-grow-1">
+                            <div class="dl-item"><span class="dl-dot" style="background:#0477bf;"></span>Active (@enrolActive)</div>
+                            <div class="dl-item"><span class="dl-dot" style="background:#2e9e6b;"></span>Completed (@enrolCompleted)</div>
+                            <div class="dl-item"><span class="dl-dot" style="background:#c0392b;"></span>Withdrawn (@enrolWithdrawn)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    @section scripts {
+        <style>
+            .live-strip {
+                display: flex;
+                align-items: center;
+                background: var(--color-surface);
+                border: 1px solid var(--color-border);
+                border-radius: var(--radius-md);
+                padding: 16px 24px;
+                box-shadow: var(--shadow-xs);
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .live-metric {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                flex: 1;
+                min-width: 100px;
+                padding: 4px 12px;
+            }
+
+            .live-metric-value {
+                font-size: 1.4rem;
+                font-weight: 700;
+                color: var(--color-text);
+                font-family: var(--font-mono);
+                letter-spacing: -0.5px;
+                line-height: 1;
+                transition: all 0.4s ease;
+            }
+
+            .live-metric-label {
+                font-size: 0.72rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--color-muted);
+                margin-top: 4px;
+                text-align: center;
+            }
+
+            .live-strip-divider {
+                width: 1px;
+                height: 40px;
+                background: var(--color-border);
+                flex-shrink: 0;
+            }
+
+            .live-indicator {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: var(--color-success);
+                background: var(--color-success-bg);
+                border: 1.5px solid rgba(46,158,107,0.2);
+                border-radius: var(--radius-pill);
+                padding: 5px 12px;
+            }
+
+            .live-dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: var(--color-success);
+                animation: livePulse 1.8s ease-in-out infinite;
+                flex-shrink: 0;
+            }
+
+            @@keyframes livePulse {
+                0%, 100% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+
+                50% {
+                    opacity: 0.4;
+                    transform: scale(0.7);
+                }
+            }
+
+            /* Gauges */
+            .gauge-wrap {
+                position: relative;
+                width: 160px;
+                height: 160px;
+                margin: 0 auto;
+            }
+
+            .gauge-label {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                pointer-events: none;
+            }
+
+            .gauge-value {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: var(--color-text);
+                letter-spacing: -1px;
+                line-height: 1;
+            }
+
+            .gauge-sub {
+                font-size: 0.7rem;
+                font-weight: 600;
+                color: var(--color-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-top: 4px;
+                text-align: center;
+                line-height: 1.3;
+            }
+
+            .gauge-detail {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+            }
+
+            /* Legends */
+            .doughnut-legend {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .dl-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.825rem;
+                color: var(--color-text);
+            }
+
+            .dl-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+
+            /* Financial bar */
+            .fin-bar-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 8px;
+            }
+
+            .fin-bar-track {
+                height: 12px;
+                border-radius: var(--radius-pill);
+                overflow: hidden;
+                display: flex;
+                background: var(--color-border);
+            }
+
+            .fin-bar-paid {
+                height: 100%;
+                background: linear-gradient(90deg, var(--color-success), #5dbe96);
+            }
+
+            .fin-bar-unpaid {
+                height: 100%;
+                background: rgba(192,57,43,0.2);
+            }
+
+            .fin-bar-legend {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 7px;
+                font-size: 0.775rem;
+                color: var(--color-muted);
+                font-weight: 500;
+            }
+
+            /* Histogram summary */
+            .histogram-summary {
+                display: flex;
+                gap: 8px;
+            }
+
+            .hs-item {
+                flex: 1;
+                text-align: center;
+                padding: 8px 6px;
+                border-radius: var(--radius-sm);
+                font-size: 0.775rem;
+            }
+
+                .hs-item strong {
+                    display: block;
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    margin-bottom: 2px;
+                }
+
+            .hs-success {
+                background: var(--color-success-bg);
+                color: var(--color-success);
+            }
+
+            .hs-warning {
+                background: var(--color-warning-bg);
+                color: var(--color-warning);
+            }
+
+            .hs-danger {
+                background: var(--color-danger-bg);
+                color: var(--color-danger);
+            }
+
+            /* Summary KPIs */
+            .summary-kpi {
+                padding: 14px 12px;
+                border-radius: var(--radius-sm);
+                text-align: center;
+                border: 1.5px solid transparent;
+            }
+
+            .summary-kpi-success {
+                background: var(--color-success-bg);
+                border-color: rgba(46,158,107,0.2);
+                color: var(--color-success);
+            }
+
+            .summary-kpi-warning {
+                background: var(--color-warning-bg);
+                border-color: rgba(212,142,16,0.2);
+                color: var(--color-warning);
+            }
+
+            .summary-kpi-danger {
+                background: var(--color-danger-bg);
+                border-color: rgba(192,57,43,0.2);
+                color: var(--color-danger);
+            }
+
+            .summary-kpi-icon {
+                font-size: 1rem;
+                opacity: 0.6;
+                margin-bottom: 6px;
+            }
+
+            .summary-kpi-value {
+                font-size: 1.3rem;
+                font-weight: 700;
+                letter-spacing: -0.5px;
+                line-height: 1;
+            }
+
+            .summary-kpi-label {
+                font-size: 0.72rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-top: 4px;
+                opacity: 0.8;
+            }
+
+            /* Empty state */
+            .empty-state {
+                text-align: center;
+                color: var(--color-muted);
+            }
+
+            .empty-state-icon {
+                font-size: 3.5rem;
+                opacity: 0.18;
+                display: block;
+                margin-bottom: 20px;
+                color: var(--color-primary);
+            }
+
+            .empty-state h5 {
+                color: var(--color-text);
+                font-weight: 600;
+                margin-bottom: 8px;
+            }
+
+            .empty-state p {
+                font-size: 0.875rem;
+                margin-bottom: 20px;
+            }
+        </style>
+
+        @if (hasData)
+        {
+            <!-- Use same Chart.js version as the dashboard fix -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+            <script>
+        (function () {
+
+            // ── Global defaults ──
+            Chart.defaults.font.family = "'DM Sans', sans-serif";
+            Chart.defaults.font.size   = 12;
+            Chart.defaults.color       = '#6b7c8d';
+            Chart.defaults.plugins.legend.display = false;
+
+            var P = '#0477bf', T = '#04c4d9', S = '#2e9e6b',
+                W = '#d48e10', D = '#c0392b', B = '#d6e4ef';
+
+            // ── Helper: build doughnut ──
+            function doughnut(id, data, colors, cutout, responsive) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                new Chart(el, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors,
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        cutout: cutout || '70%',
+                        responsive: responsive !== false,
+                        maintainAspectRatio: true,
+                        animation: { duration: 800 },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: responsive !== false }
+                        }
+                    }
+                });
+            }
+
+            // ── Row 1: Coverage Gauges ──
+            // Each gauge is a two-segment doughnut (value + remainder)
+            var docPct   = @docCoverage;
+            var clearPct = @clearCoverage;
+            var payPct   = @payCoverage;
+
+            doughnut('gaugeDoc',   [docPct,   100 - docPct],   [P, B], '72%');
+            doughnut('gaugeClear', [clearPct, 100 - clearPct], [T, B], '72%');
+            doughnut('gaugePay',   [payPct,   100 - payPct],   [S, B], '72%');
+
+            // ── Row 2a: Quality Trend line chart ──
+            var trendEl = document.getElementById('trendChart');
+            if (trendEl) {
+                new Chart(trendEl, {
+                    type: 'line',
+                    data: {
+                        labels: @Html.Raw(ViewBag.TrendLabels),
+                        datasets: [
+                            {
+                                label: 'Avg Quality Score',
+                                data: @Html.Raw(ViewBag.TrendScores),
+                                borderColor: P,
+                                backgroundColor: 'rgba(4,119,191,0.08)',
+                                borderWidth: 2.5,
+                                pointBackgroundColor: P,
+                                pointRadius: 5,
+                                fill: true,
+                                tension: 0.4,
+                                spanGaps: true,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'New Customers',
+                                data: @Html.Raw(ViewBag.TrendCounts),
+                                borderColor: T,
+                                backgroundColor: 'rgba(4,196,217,0.06)',
+                                borderWidth: 2,
+                                pointBackgroundColor: T,
+                                pointRadius: 4,
+                                fill: true,
+                                tension: 0.4,
+                                yAxisID: 'y2'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: { boxWidth: 12, padding: 16 }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                min: 0, max: 100,
+                                grid: { color: 'rgba(214,228,239,0.5)' },
+                                ticks: { callback: function(v) { return v + '%'; } }
+                            },
+                            y2: {
+                                position: 'right',
+                                min: 0,
+                                grid: { display: false },
+                                ticks: { stepSize: 1 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Row 2b: Risk Distribution doughnut ──
+            var riskEl = document.getElementById('riskChart');
+            if (riskEl) {
+                new Chart(riskEl, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Low Risk', 'Medium', 'High Risk'],
+                        datasets: [{
+                            data: [@riskLow, @riskMed, @riskHigh],
+                            backgroundColor: [S, W, D],
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        cutout: '60%',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(c) {
+                                        return ' ' + c.label + ': ' + c.raw + ' customers';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Row 3a: Field Completion horizontal bar ──
+            var fieldEl = document.getElementById('fieldChart');
+            if (fieldEl) {
+                new Chart(fieldEl, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(ViewBag.FieldLabels),
+                        datasets: [{
+                            data: @Html.Raw(ViewBag.FieldData),
+                            backgroundColor: @Html.Raw(ViewBag.FieldColors),
+                            borderRadius: 4,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: {
+                                min: 0, max: 100,
+                                grid: { color: 'rgba(214,228,239,0.5)' },
+                                ticks: { callback: function(v) { return v + '%'; } }
+                            },
+                            y: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // ── Row 3b: Score Distribution histogram ──
+            var histEl = document.getElementById('histogramChart');
+            if (histEl) {
+                var histLabels = @Html.Raw(ViewBag.HistogramLabels);
+                var histData   = @Html.Raw(ViewBag.HistogramData);
+
+                // Colour each bar by its score band — no @@Html.Raw needed
+                var histColors = histLabels.map(function(l) {
+                    var lo = parseInt(l.split('-')[0], 10);
+                    return lo >= 80 ? 'rgba(46,158,107,0.8)'
+                         : lo >= 60 ? 'rgba(212,142,16,0.8)'
+                                    : 'rgba(192,57,43,0.8)';
+                });
+
+                new Chart(histEl, {
+                    type: 'bar',
+                    data: {
+                        labels: histLabels,
+                        datasets: [{
+                            data: histData,
+                            backgroundColor: histColors,
+                            borderRadius: 4,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: {
+                                grid: { color: 'rgba(214,228,239,0.5)' },
+                                ticks: { stepSize: 1 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Row 4a: Quality by Customer Type bar ──
+            var typeEl = document.getElementById('typeChart');
+            if (typeEl) {
+                new Chart(typeEl, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(ViewBag.TypeLabels),
+                        datasets: [{
+                            data: @Html.Raw(ViewBag.TypeData),
+                            backgroundColor: 'rgba(4,119,191,0.75)',
+                            borderRadius: 6,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: {
+                                min: 0, max: 100,
+                                ticks: { callback: function(v) { return v + '%'; } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Row 4b: Enrollment status doughnut ──
+            var enrolEl = document.getElementById('enrolStatusChart');
+            if (enrolEl) {
+                new Chart(enrolEl, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Active', 'Completed', 'Withdrawn'],
+                        datasets: [{
+                            data: [@enrolActive, @enrolCompleted, @enrolWithdrawn],
+                            backgroundColor: [P, S, D],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        cutout: '60%',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(c) {
+                                        return ' ' + c.label + ': ' + c.raw;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Row 5a: Active vs Inactive doughnut ──
+            var activeEl = document.getElementById('activeChart');
+            if (activeEl) {
+                new Chart(activeEl, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Active', 'Inactive'],
+                        datasets: [{
+                            data: [@activeCount, @inactiveCount],
+                            backgroundColor: [P, B],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        cutout: '65%',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(c) {
+                                        return ' ' + c.label + ': ' + c.raw;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Live stats polling ──
+            function animateValue(el, val) {
+                if (!el) return;
+                el.style.transform = 'scale(1.15)';
+                el.textContent = val;
+                setTimeout(function() { el.style.transform = 'scale(1)'; }, 200);
+            }
+
+            function fetchLive() {
+                fetch('@Url.Action("LiveStats", "DataQuality")')
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        animateValue(document.getElementById('lm-total'),        d.totalCustomers);
+                        animateValue(document.getElementById('lm-quality'),      d.avgQuality + '%');
+                        animateValue(document.getElementById('lm-new-today'),    d.newToday);
+                        animateValue(document.getElementById('lm-critical'),     d.criticalCount);
+                        animateValue(document.getElementById('lm-pending'),      d.pendingClear);
+                        animateValue(document.getElementById('lm-expired-docs'), d.expiredDocs);
+                        document.getElementById('lastRefreshed').textContent = d.lastRefreshed;
+                    })
+                    .catch(function() {});
+            }
+
+            fetchLive();
+            setInterval(fetchLive, 60000);
+
+        })();
+            </script>
+        }
+    }
+
+}

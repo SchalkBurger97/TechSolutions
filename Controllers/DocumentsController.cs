@@ -1,21 +1,26 @@
 ﻿using System;
-using System.Linq;
-using System.Web.Mvc;
-using TechSolutions.Models;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Web;
+using System.Web.Mvc;
 using TechSolutions.Helpers;
+using TechSolutions.Models;
+using TechSolutions.Services;
+using Microsoft.AspNet.Identity;
 
 namespace TechSolutions.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Employee")]
     public class DocumentsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AuditService _audit;
 
         public DocumentsController()
         {
             _context = new ApplicationDbContext();
+            _audit = new AuditService(_context);
         }
 
         // GET: Documents/Index?customerId=5
@@ -47,14 +52,9 @@ namespace TechSolutions.Controllers
                 return RedirectToAction("Index", "Customer");
             }
 
-            var model = new IdentificationDocument
-            {
-                CustomerID = customerId
-            };
-
             ViewBag.Customer = customer;
             ViewBag.DocumentTypes = GetDocumentTypes();
-            return View(model);
+            return View(new IdentificationDocument { CustomerID = customerId });
         }
 
         // POST: Documents/Create
@@ -64,109 +64,77 @@ namespace TechSolutions.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var customer = _context.Customers.Find(model.CustomerID);
-                ViewBag.Customer = customer;
+                ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                 ViewBag.DocumentTypes = GetDocumentTypes();
                 return View(model);
             }
 
             try
             {
-                // Handle file upload with ENCRYPTION
+                // ── File upload (encrypted at rest)
                 if (documentFile != null && documentFile.ContentLength > 0)
                 {
-                    // Validate file size (5MB max)
                     if (documentFile.ContentLength > 5 * 1024 * 1024)
                     {
                         TempData["ErrorMessage"] = "File size must be less than 5MB.";
-                        var customer2 = _context.Customers.Find(model.CustomerID);
-                        ViewBag.Customer = customer2;
+                        ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                         ViewBag.DocumentTypes = GetDocumentTypes();
                         return View(model);
                     }
 
-                    // Validate file type
                     var allowedExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
                     var fileExtension = Path.GetExtension(documentFile.FileName).ToLower();
                     if (!allowedExtensions.Contains(fileExtension))
                     {
                         TempData["ErrorMessage"] = "Only PDF, JPG, and PNG files are allowed.";
-                        var customer2 = _context.Customers.Find(model.CustomerID);
-                        ViewBag.Customer = customer2;
+                        ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                         ViewBag.DocumentTypes = GetDocumentTypes();
                         return View(model);
                     }
 
-                    // Create uploads directory if it doesn't exist
                     var uploadsPath = Server.MapPath("~/App_Data/DocumentUploads");
-                    if (!Directory.Exists(uploadsPath))
-                    {
-                        Directory.CreateDirectory(uploadsPath);
-                    }
+                    if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 
-                    // Generate unique filename for encrypted file
                     var encryptedFileName = $"{model.CustomerID}_{Guid.NewGuid()}.encrypted";
                     var encryptedFilePath = Path.Combine(uploadsPath, encryptedFileName);
-
-                    // Save temp file first
                     var tempFilePath = Path.Combine(uploadsPath, $"temp_{Guid.NewGuid()}{fileExtension}");
+
                     documentFile.SaveAs(tempFilePath);
-
-                    // Encrypt the file
                     EncryptionHelper.EncryptFile(tempFilePath, encryptedFilePath);
+                    if (System.IO.File.Exists(tempFilePath)) System.IO.File.Delete(tempFilePath);
 
-                    // Delete temp file - USE System.IO.File
-                    if (System.IO.File.Exists(tempFilePath))
-                    {
-                        System.IO.File.Delete(tempFilePath);
-                    }
-
-                    // Store file info in model
                     model.DocumentFilePath = encryptedFileName;
                     model.OriginalFileName = documentFile.FileName;
                     model.FileType = fileExtension.TrimStart('.');
                     model.FileSizeBytes = documentFile.ContentLength;
                 }
 
-                // Encrypt sensitive fields
-                if (!string.IsNullOrEmpty(model.IDNumber))
-                {
-                    model.DocumentNumber = model.IDNumber; // Auto-populate
-                    model.IDNumber = EncryptionHelper.EncryptString(model.IDNumber);
-                }
+                // ── Auto-generate document reference number
+                model.DocumentNumber = GenerateDocumentNumber(model.DocumentType);
 
-                if (!string.IsNullOrEmpty(model.PassportNumber))
-                {
-                    model.DocumentNumber = model.PassportNumber; // Auto-populate
-                    model.PassportNumber = EncryptionHelper.EncryptString(model.PassportNumber);
-                }
-
-                if (!string.IsNullOrEmpty(model.ProfessionalRegNumber))
-                {
-                    model.DocumentNumber = model.ProfessionalRegNumber; // Auto-populate
-                    model.ProfessionalRegNumber = EncryptionHelper.EncryptString(model.ProfessionalRegNumber);
-                }
-
-                // Encrypt the DocumentNumber too
-                if (!string.IsNullOrEmpty(model.DocumentNumber))
-                {
-                    model.DocumentNumber = EncryptionHelper.EncryptString(model.DocumentNumber);
-                }
-
+                model.CreatedBy = User.Identity.GetUserId();
                 model.CreatedDate = DateTime.Now;
                 model.ModifiedDate = DateTime.Now;
 
                 _context.IdentificationDocuments.Add(model);
                 _context.SaveChanges();
 
-                TempData["SuccessMessage"] = "ID document added successfully with encryption.";
+                var customer = _context.Customers.Find(model.CustomerID);
+                string entityDesc = customer != null
+                    ? $"{customer.FullName} ({customer.CustomerCode})"
+                    : $"CustomerID {model.CustomerID}";
+
+                _audit.Log(this, "Create", "Document", model.DocumentID,
+                    entityDesc,
+                    $"Added {model.DocumentType} document. Reference: {model.DocumentNumber}.");
+
+                TempData["SuccessMessage"] = $"Document added successfully. Reference: {model.DocumentNumber}";
                 return RedirectToAction("Index", new { customerId = model.CustomerID });
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = "Error saving document: " + ex.Message;
-                var customer = _context.Customers.Find(model.CustomerID);
-                ViewBag.Customer = customer;
+                ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                 ViewBag.DocumentTypes = GetDocumentTypes();
                 return View(model);
             }
@@ -175,11 +143,7 @@ namespace TechSolutions.Controllers
         // GET: Documents/Edit/5
         public ActionResult Edit(int? id)
         {
-            if (!id.HasValue)
-            {
-                TempData["ErrorMessage"] = "Document ID is required.";
-                return RedirectToAction("Index", "Customer");
-            }
+            if (!id.HasValue) return RedirectToAction("Index", "Customer");
 
             var document = _context.IdentificationDocuments.Find(id.Value);
             if (document == null)
@@ -188,24 +152,7 @@ namespace TechSolutions.Controllers
                 return RedirectToAction("Index", "Customer");
             }
 
-            // Decrypt sensitive fields for editing
-            if (!string.IsNullOrEmpty(document.IDNumber))
-            {
-                document.IDNumber = EncryptionHelper.DecryptString(document.IDNumber);
-            }
-
-            if (!string.IsNullOrEmpty(document.PassportNumber))
-            {
-                document.PassportNumber = EncryptionHelper.DecryptString(document.PassportNumber);
-            }
-
-            if (!string.IsNullOrEmpty(document.ProfessionalRegNumber))
-            {
-                document.ProfessionalRegNumber = EncryptionHelper.DecryptString(document.ProfessionalRegNumber);
-            }
-
-            var customer = _context.Customers.Find(document.CustomerID);
-            ViewBag.Customer = customer;
+            ViewBag.Customer = _context.Customers.Find(document.CustomerID);
             ViewBag.DocumentTypes = GetDocumentTypes();
             return View(document);
         }
@@ -217,8 +164,7 @@ namespace TechSolutions.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var customer = _context.Customers.Find(model.CustomerID);
-                ViewBag.Customer = customer;
+                ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                 ViewBag.DocumentTypes = GetDocumentTypes();
                 return View(model);
             }
@@ -232,45 +178,52 @@ namespace TechSolutions.Controllers
                     return RedirectToAction("Index", new { customerId = model.CustomerID });
                 }
 
-                existing.DocumentType = model.DocumentType;
+                var customer = _context.Customers.Find(model.CustomerID);
+                string entityDesc = customer != null
+                    ? $"{customer.FullName} ({customer.CustomerCode})"
+                    : $"CustomerID {model.CustomerID}";
+
+                var changes = new Dictionary<string, (string, string)>
+                {
+                    ["Document Type"] = (existing.DocumentType, model.DocumentType),
+                    ["Issuing Country"] = (existing.IssuingCountry, model.IssuingCountry),
+                    ["Issuing Authority"] = (existing.IssuingAuthority, model.IssuingAuthority),
+                    ["Issue Date"] = (existing.IssueDate?.ToString("dd/MM/yyyy"), model.IssueDate?.ToString("dd/MM/yyyy")),
+                    ["Expiry Date"] = (existing.ExpiryDate?.ToString("dd/MM/yyyy"), model.ExpiryDate?.ToString("dd/MM/yyyy")),
+                    ["Is Verified"] = (existing.IsVerified.ToString(), model.IsVerified.ToString()),
+                    ["Verification Notes"] = (existing.VerificationNotes, model.VerificationNotes),
+                };
+                string fieldChanges = _audit.BuildFieldChanges(changes);
+
                 existing.IssuingCountry = model.IssuingCountry;
                 existing.IssuingAuthority = model.IssuingAuthority;
                 existing.IssueDate = model.IssueDate;
                 existing.ExpiryDate = model.ExpiryDate;
                 existing.IsVerified = model.IsVerified;
                 existing.VerificationNotes = model.VerificationNotes;
-
-                // Re-encrypt sensitive fields
-                if (!string.IsNullOrEmpty(model.IDNumber))
-                {
-                    existing.IDNumber = EncryptionHelper.EncryptString(model.IDNumber);
-                    existing.DocumentNumber = existing.IDNumber;
-                }
-
-                if (!string.IsNullOrEmpty(model.PassportNumber))
-                {
-                    existing.PassportNumber = EncryptionHelper.EncryptString(model.PassportNumber);
-                    existing.DocumentNumber = existing.PassportNumber;
-                }
-
-                if (!string.IsNullOrEmpty(model.ProfessionalRegNumber))
-                {
-                    existing.ProfessionalRegNumber = EncryptionHelper.EncryptString(model.ProfessionalRegNumber);
-                    existing.DocumentNumber = existing.ProfessionalRegNumber;
-                }
-
                 existing.ModifiedDate = DateTime.Now;
+
+                // Track verification timestamp
+                if (model.IsVerified && !existing.IsVerified)
+                {
+                    existing.VerifiedBy = User.Identity.GetUserId();
+                    existing.VerifiedDate = DateTime.Now;
+                }
 
                 _context.SaveChanges();
 
-                TempData["SuccessMessage"] = "ID document updated successfully.";
+                _audit.Log(this, "Update", "Document", existing.DocumentID,
+                    entityDesc,
+                    $"Updated {existing.DocumentType} document. Reference: {existing.DocumentNumber}.",
+                    fieldChanges);
+
+                TempData["SuccessMessage"] = "Document updated successfully.";
                 return RedirectToAction("Index", new { customerId = model.CustomerID });
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = "Error updating document: " + ex.Message;
-                var customer = _context.Customers.Find(model.CustomerID);
-                ViewBag.Customer = customer;
+                ViewBag.Customer = _context.Customers.Find(model.CustomerID);
                 ViewBag.DocumentTypes = GetDocumentTypes();
                 return View(model);
             }
@@ -279,6 +232,7 @@ namespace TechSolutions.Controllers
         // POST: Documents/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public ActionResult Delete(int id, int customerId)
         {
             try
@@ -286,13 +240,18 @@ namespace TechSolutions.Controllers
                 var document = _context.IdentificationDocuments.Find(id);
                 if (document != null)
                 {
+                    var customer = _context.Customers.Find(customerId);
+                    string entityDesc = customer != null
+                        ? $"{customer.FullName} ({customer.CustomerCode})"
+                        : $"CustomerID {customerId}";
+
+                    _audit.Log(this, "Delete", "Document", id,
+                        entityDesc,
+                        $"Deleted {document.DocumentType} document. Reference: {document.DocumentNumber}.");
+
                     _context.IdentificationDocuments.Remove(document);
                     _context.SaveChanges();
-                    TempData["SuccessMessage"] = "ID document deleted successfully.";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Document not found.";
+                    TempData["SuccessMessage"] = "Document deleted successfully.";
                 }
             }
             catch (Exception ex)
@@ -300,21 +259,7 @@ namespace TechSolutions.Controllers
                 TempData["ErrorMessage"] = "Error deleting document: " + ex.Message;
             }
 
-            return RedirectToAction("Index", new { customerId = customerId });
-        }
-
-        private SelectList GetDocumentTypes()
-        {
-            var types = new[]
-            {
-                "Driver's License",
-                "Passport",
-                "National ID Card",
-                "Birth Certificate",
-                "Social Security Card",
-                "Other"
-            };
-            return new SelectList(types);
+            return RedirectToAction("Index", new { customerId });
         }
 
         // GET: Documents/Download/5
@@ -323,51 +268,37 @@ namespace TechSolutions.Controllers
             try
             {
                 var document = _context.IdentificationDocuments.Find(id);
-                if (document == null)
-                {
-                    TempData["ErrorMessage"] = "Document not found.";
-                    return RedirectToAction("Index", "Customer");
-                }
+                if (document == null) return RedirectToAction("Index", "Customer");
 
-                // Verify user has permission (add role check here later)
                 var customer = _context.Customers.Find(document.CustomerID);
-                if (customer == null)
-                {
-                    TempData["ErrorMessage"] = "Customer not found.";
-                    return RedirectToAction("Index", "Customer");
-                }
+                string entityDesc = customer != null
+                    ? $"{customer.FullName} ({customer.CustomerCode})"
+                    : $"CustomerID {document.CustomerID}";
 
-                // Get encrypted file path
                 var uploadsPath = Server.MapPath("~/App_Data/DocumentUploads");
                 var encryptedFilePath = Path.Combine(uploadsPath, document.DocumentFilePath);
 
-                // USE System.IO.File HERE TOO
                 if (!System.IO.File.Exists(encryptedFilePath))
                 {
                     TempData["ErrorMessage"] = "Document file not found on server.";
                     return RedirectToAction("Index", new { customerId = document.CustomerID });
                 }
 
-                // Decrypt file
                 byte[] decryptedBytes = EncryptionHelper.DecryptFile(encryptedFilePath);
 
-                // Determine content type
+                _audit.Log(this, "View", "Document", id,
+                    entityDesc,
+                    $"Downloaded document file: {document.OriginalFileName}");
+
                 string contentType = "application/octet-stream";
-                switch (document.FileType.ToLower())
+                switch (document.FileType?.ToLower())
                 {
-                    case "pdf":
-                        contentType = "application/pdf";
-                        break;
+                    case "pdf": contentType = "application/pdf"; break;
                     case "jpg":
-                    case "jpeg":
-                        contentType = "image/jpeg";
-                        break;
-                    case "png":
-                        contentType = "image/png";
-                        break;
+                    case "jpeg": contentType = "image/jpeg"; break;
+                    case "png": contentType = "image/png"; break;
                 }
 
-                // Return decrypted file (THIS File() is correct - it's the Controller method)
                 return File(decryptedBytes, contentType, document.OriginalFileName);
             }
             catch (Exception ex)
@@ -377,12 +308,48 @@ namespace TechSolutions.Controllers
             }
         }
 
+        // ── Helpers ──────────────────────────────────────────────────────────
+        private string GenerateDocumentNumber(string documentType)
+        {
+            string prefix;
+            if (documentType == "Driver's License")
+                prefix = "DRV";
+            else if (documentType == "Passport")
+                prefix = "PSP";
+            else if (documentType == "National ID Card")
+                prefix = "NID";
+            else
+                prefix = "OTH";
+
+            int year = DateTime.Now.Year;
+            string pattern = $"{prefix}-{year}-";
+
+            // Count existing documents with this prefix+year to get next sequence
+            int count = _context.IdentificationDocuments
+                .Count(d => d.DocumentNumber != null && d.DocumentNumber.StartsWith(pattern));
+
+            int sequence = count + 1;
+
+            // Collision guard: increment until unique
+            string candidate;
+            do
+            {
+                candidate = $"{pattern}{sequence:D5}";
+                sequence++;
+            }
+            while (_context.IdentificationDocuments.Any(d => d.DocumentNumber == candidate));
+
+            return candidate;
+        }
+
+        private SelectList GetDocumentTypes()
+        {
+            return new SelectList(new[] { "Driver's License", "Passport", "National ID Card", "Other" });
+        }
+
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                _context.Dispose();
-            }
+            if (disposing) { _context.Dispose(); _audit.Dispose(); }
             base.Dispose(disposing);
         }
     }

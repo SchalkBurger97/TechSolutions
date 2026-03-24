@@ -1,0 +1,364 @@
+﻿@model TechSolutions.Models.Report
+@{
+    ViewBag.Title = Model.ReportName;
+    var report = ViewBag.Report as TechSolutions.Models.Report;
+    var paramDefs = ViewBag.ParamDefs as List<Dictionary<string, string>>;
+    var paramValues = ViewBag.ParamValues as Dictionary<string, string>;
+    var results = ViewBag.Results as System.Data.DataTable;
+    string error = ViewBag.Error;
+    int rowCount = ViewBag.RowCount ?? 0;
+    string runAt = ViewBag.RunAt;
+    bool hasResults = results != null && results.Rows.Count > 0;
+    bool hasParams = paramDefs != null && paramDefs.Count > 0;
+    var formats = (report.ExportFormats ?? "").Split(',').Select(f => f.Trim()).ToList();
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h2>
+            <i class="fa-solid @report.IconClass"></i>
+            @report.ReportName
+        </h2>
+        <span class="text-muted" style="font-size:0.875rem;">@report.Description</span>
+    </div>
+    <a href="@ViewBag.ReturnUrl" class="btn btn-default">
+        <i class="fa-solid fa-arrow-left"></i> @ViewBag.ReturnLabel
+    </a>
+</div>
+
+<!-- Parameter Form -->
+@using (Html.BeginForm("Run", "Reports", new { id = report.ReportID }, FormMethod.Post, new { id = "reportForm" }))
+{
+    <div class="content-card mb-4">
+        <div class="content-card-header">
+            <h4 class="mb-0">
+                <i class="fa-solid fa-sliders"></i>
+                @(hasParams ? "Report Parameters" : "No Parameters Required")
+            </h4>
+        </div>
+        <div class="content-card-body">
+            @if (hasParams)
+            {
+                <div class="row g-3">
+                    @foreach (var param in paramDefs)
+                    {
+                        string pName = param.ContainsKey("Name") ? param["Name"] : "";
+                        string pLabel = param.ContainsKey("Label") ? param["Label"] : pName;
+                        string pType = param.ContainsKey("Type") ? param["Type"] : "text";
+                        string pDefault = param.ContainsKey("Default") ? param["Default"] : "";
+                        string pOptions = param.ContainsKey("Options") ? param["Options"] : "";
+                        string pValue = paramValues != null && paramValues.ContainsKey(pName)
+                            ? paramValues[pName] : pDefault;
+
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="control-label">@pLabel</label>
+                                @if (pType == "select" && !string.IsNullOrEmpty(pOptions))
+                                {
+                                    <select name="@pName" class="form-control">
+                                        @foreach (var opt in pOptions.Split(','))
+                                        {
+                                            if (opt.Trim() == pValue)
+                                            {
+                                                <option value="@opt.Trim()" selected="selected">@opt.Trim()</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@opt.Trim()">@opt.Trim()</option>
+                                            }
+                                        }
+                                    </select>
+                                }
+                                else if (pType == "date")
+                                {
+                                    <input type="date" name="@pName" class="form-control"
+                                           value="@pValue" />
+                                }
+                                else if (pType == "number")
+                                {
+                                    <input type="number" name="@pName" class="form-control"
+                                           value="@pValue" min="0" />
+                                }
+                                else
+                                {
+                                    <input type="text" name="@pName" class="form-control"
+                                           value="@pValue" />
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            <div class="d-flex align-items-center gap-2 @(hasParams ? "mt-3" : "")">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-play"></i> Run Report
+                </button>
+                @if (hasResults)
+                {
+                    <span class="text-muted" style="font-size:0.825rem;">
+                        <i class="fa-solid fa-circle-check" style="color:var(--color-success);"></i>
+                        @rowCount row@(rowCount == 1 ? "" : "s") &mdash; @runAt
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Error -->
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger mb-4">
+        <i class="fa-solid fa-triangle-exclamation"></i> @error
+    </div>
+}
+
+<!-- Results -->
+@if (hasResults)
+{
+    <!-- Export toolbar -->
+    <div class="content-card mb-0">
+        <div class="content-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <h4 class="mb-0">
+                <i class="fa-solid fa-table"></i>
+                Results
+                <span class="badge badge-primary ms-2">@rowCount rows</span>
+            </h4>
+            <div class="export-toolbar">
+                @using (Html.BeginForm("ExportExcel", "Reports", new { id = report.ReportID }, FormMethod.Post, new { @class = "d-inline" }))
+                {
+                    // Post current param values as hidden fields
+                    if (paramValues != null)
+                    {
+                        foreach (var kv in paramValues)
+                        {
+                            <input type="hidden" name="@kv.Key" value="@kv.Value" />
+                        }
+                    }
+                    <button type="submit" class="btn btn-sm export-btn export-excel">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </button>
+                }
+                @using (Html.BeginForm("ExportPdf", "Reports", new { id = report.ReportID }, FormMethod.Post, new { @class = "d-inline" }))
+                {
+                    if (paramValues != null)
+                    {
+                        foreach (var kv in paramValues)
+                        {
+                            <input type="hidden" name="@kv.Key" value="@kv.Value" />
+                        }
+                    }
+                    <button type="submit" class="btn btn-sm export-btn export-pdf">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                }
+                @using (Html.BeginForm("PrintHtml", "Reports", new { id = report.ReportID }, FormMethod.Post, new { target = "_blank", @class = "d-inline" }))
+                {
+                    if (paramValues != null)
+                    {
+                        foreach (var kv in paramValues)
+                        {
+                            <input type="hidden" name="@kv.Key" value="@kv.Value" />
+                        }
+                    }
+                    <button type="submit" class="btn btn-sm export-btn export-print">
+                        <i class="fa-solid fa-print"></i> Print
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Table with column search -->
+        <div class="content-card-body p-0">
+            <div style="padding:10px 16px;border-bottom:1px solid var(--color-border);">
+                <div class="search-input-wrap" style="max-width:320px;">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="tableSearch" class="form-control search-input"
+                           placeholder="Filter results…" oninput="filterTable(this.value)" />
+                </div>
+            </div>
+
+            <div class="report-table-wrap">
+                <table class="table report-table" id="reportTable">
+                    <thead>
+                        <tr>
+                            @foreach (System.Data.DataColumn col in results.Columns)
+                            {
+                                <th>@col.ColumnName</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (System.Data.DataRow row in results.Rows)
+                        {
+                            <tr>
+                                @foreach (System.Data.DataColumn col in results.Columns)
+                                {
+                                    string val = row[col] == DBNull.Value ? "" : row[col].ToString();
+                                    string cellCls = val == "EXPIRED" ? "cell-danger" :
+                                                     val == "No" ? "cell-danger" :
+                                                     val == "Verified" ? "cell-success" :
+                                                     val == "Yes" ? "cell-success" :
+                                                     val == "Pending" ? "cell-warning" :
+                                                     val == "Active" ? "cell-success" :
+                                                     val == "Completed" ? "cell-info" : "";
+                                    <td class="@cellCls">@val</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else if (results != null && results.Rows.Count == 0)
+{
+    <div class="content-card">
+        <div class="content-card-body" style="padding:40px 20px;text-align:center;">
+            <i class="fa-solid fa-inbox" style="font-size:2.5rem;opacity:0.15;color:var(--color-primary);display:block;margin-bottom:14px;"></i>
+            <h6 style="color:var(--color-text);font-weight:600;margin-bottom:6px;">No results found</h6>
+            <p style="font-size:0.875rem;color:var(--color-muted);margin:0;">
+                Try adjusting the parameters and running the report again.
+            </p>
+        </div>
+    </div>
+}
+
+@section scripts {
+    <style>
+        .export-toolbar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .export-excel {
+            background: #e8f5e9;
+            color: #1b7a34;
+            border-color: rgba(27,122,52,0.25);
+        }
+
+            .export-excel:hover {
+                background: #1b7a34;
+                color: #fff;
+            }
+
+        .export-pdf {
+            background: #fdecea;
+            color: #c0392b;
+            border-color: rgba(192,57,43,0.25);
+        }
+
+            .export-pdf:hover {
+                background: #c0392b;
+                color: #fff;
+            }
+
+        .export-print {
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+            border-color: rgba(4,119,191,0.2);
+        }
+
+            .export-print:hover {
+                background: var(--color-primary);
+                color: #fff;
+            }
+
+        .report-table-wrap {
+            overflow-x: auto;
+            max-height: 560px;
+            overflow-y: auto;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.825rem;
+        }
+
+            .report-table thead th {
+                position: sticky;
+                top: 0;
+                z-index: 2;
+                background: var(--color-primary);
+                color: #fff;
+                font-weight: 600;
+                font-size: 0.78rem;
+                padding: 10px 14px;
+                text-align: left;
+                white-space: nowrap;
+                border: none;
+            }
+
+            .report-table tbody tr {
+                border-bottom: 1px solid var(--color-border);
+                transition: background 0.15s ease;
+            }
+
+                .report-table tbody tr:nth-child(even) {
+                    background: var(--color-bg);
+                }
+
+                .report-table tbody tr:hover {
+                    background: var(--color-primary-light);
+                }
+
+            .report-table tbody td {
+                padding: 9px 14px;
+                color: var(--color-text);
+                vertical-align: middle;
+                white-space: nowrap;
+            }
+
+        /* Semantic cell colouring */
+        .cell-danger {
+            color: var(--color-danger) !important;
+            font-weight: 600;
+        }
+
+        .cell-success {
+            color: var(--color-success) !important;
+            font-weight: 600;
+        }
+
+        .cell-warning {
+            color: var(--color-warning) !important;
+            font-weight: 600;
+        }
+
+        .cell-info {
+            color: var(--color-secondary) !important;
+            font-weight: 600;
+        }
+
+        .report-table tbody tr.row-hidden {
+            display: none;
+        }
+    </style>
+
+    <script>
+        function filterTable(query) {
+            var q = query.toLowerCase().trim();
+            document.querySelectorAll('#reportTable tbody tr').forEach(function (row) {
+                var text = row.textContent.toLowerCase();
+                row.classList.toggle('row-hidden', q !== '' && !text.includes(q));
+            });
+        }
+    </script>
+}

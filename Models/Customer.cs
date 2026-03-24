@@ -68,6 +68,27 @@ namespace TechSolutions.Models
         [RegularExpression(@"^[0-9]{4}$", ErrorMessage = "Postal code must be exactly 4 digits")]
         public string PostalCode { get; set; }
 
+        // ── Identity Numbers (stored encrypted) ──────────────────────────────
+        // Store whichever is applicable: SA ID or Passport.
+        // Values are encrypted by the controller before persisting.
+
+        /// <summary>Which identity document type was provided: "ID" or "Passport".</summary>
+        [StringLength(10)]
+        [Display(Name = "ID Type")]
+        public string IDType { get; set; }
+
+        /// <summary>Encrypted SA ID number (13 digits). Populated when IDType == "ID".</summary>
+        [StringLength(500)]
+        [Display(Name = "SA ID Number")]
+        public string IDNumber { get; set; }
+
+        /// <summary>Encrypted passport number. Populated when IDType == "Passport".</summary>
+        [StringLength(500)]
+        [Display(Name = "Passport Number")]
+        public string PassportNumber { get; set; }
+
+        // ─────────────────────────────────────────────────────────────────────
+
         [Display(Name = "Data Quality Score")]
         public decimal DataQualityScore { get; set; } = 0;
 
@@ -83,12 +104,14 @@ namespace TechSolutions.Models
         [Display(Name = "Created Date")]
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        public int? CreatedBy { get; set; }
+        [StringLength(128)]
+        public string CreatedBy { get; set; }
 
         [Display(Name = "Modified Date")]
         public DateTime? ModifiedDate { get; set; }
 
-        public int? ModifiedBy { get; set; }
+        [StringLength(128)]
+        public string ModifiedBy { get; set; }
 
         // Computed property
         [NotMapped]
