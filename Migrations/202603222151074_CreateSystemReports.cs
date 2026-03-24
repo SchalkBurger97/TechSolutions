@@ -84,11 +84,11 @@
                         ) THEN 'EXPIRED' ELSE 'OK' END                  AS [Doc Expiry],
                         -- Payments
                         CASE WHEN EXISTS (
-                            SELECT 1 FROM dbo.PaymentInformation p
+                            SELECT 1 FROM dbo.PaymentInformations p
                             WHERE p.CustomerID = c.CustomerID AND p.IsActive = 1
                         ) THEN 'Yes' ELSE 'No' END                     AS [Has Payment],
                         CASE WHEN EXISTS (
-                            SELECT 1 FROM dbo.PaymentInformation p
+                            SELECT 1 FROM dbo.PaymentInformations p
                             WHERE p.CustomerID = c.CustomerID AND p.IsActive = 1
                               AND p.CardExpiryDate < GETDATE()
                         ) THEN 'EXPIRED' ELSE 'OK' END                  AS [Payment Expiry],
@@ -181,7 +181,7 @@
                             ELSE 'OK'
                         END                         AS [Status],
                         DATEDIFF(DAY, GETDATE(), p.CardExpiryDate) AS [Days Remaining]
-                    FROM dbo.PaymentInformation p
+                    FROM dbo.PaymentInformations p
                     INNER JOIN dbo.Customers c ON c.CustomerID = p.CustomerID
                     WHERE c.IsDeleted = 0
                       AND p.IsActive = 1

@@ -313,11 +313,11 @@ else
                     <div class="fin-bar-wrap mb-3">
                         <div class="fin-bar-header">
                             <span style="font-size:0.78rem;font-weight:700;color:var(--color-muted);text-transform:uppercase;letter-spacing:0.5px;">Fee Collection Rate</span>
-                            <span style="font-size:0.9rem;font-weight:700;color:var(--color-primary);">@(enrolPaidPct)%</span>
+                            <span style="font-size:0.9rem;font-weight:700;color:var(--color-primary);">@(enrolPaidPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%</span>
                         </div>
                         <div class="fin-bar-track">
-                            <div class="fin-bar-paid" style="width:@(enrolPaidPct)%"></div>
-                            <div class="fin-bar-unpaid" style="width:@(100 - enrolPaidPct)%"></div>
+                            <div class="fin-bar-paid" style="width:@(enrolPaidPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                            <div class="fin-bar-unpaid" style="width:@((100 - enrolPaidPct).ToString("F1", System.Globalization.CultureInfo.InvariantCulture))%"></div>
                         </div>
                         <div class="fin-bar-legend">
                             <span><i class="fa-solid fa-circle" style="color:var(--color-success);font-size:0.6rem;"></i> Paid: R @(enrolTotalPaid.ToString("N0"))</span>

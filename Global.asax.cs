@@ -6,6 +6,7 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using TechSolutions.Binders;
 using TechSolutions.Models;
 
 namespace TechSolutions
@@ -18,6 +19,8 @@ namespace TechSolutions
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+            ModelBinders.Binders.Add(typeof(decimal), new DecimalModelBinder());
+            ModelBinders.Binders.Add(typeof(decimal?), new DecimalModelBinder());
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<ApplicationDbContext, TechSolutions.Migrations.Configuration>());
             try
             {
