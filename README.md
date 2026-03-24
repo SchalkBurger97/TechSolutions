@@ -151,6 +151,7 @@ If you encounter a missing roslyn/csc.exe error, run the following in the Packag
 ```
 Update-Package Microsoft.CodeDom.Providers.DotNetCompilerPlatform -r
 ```
+You can click cancel on the dialog window that pops up.
 
 Then clean and rebuild the solution via Build -> Clean Solution, then Build -> Rebuild Solution.
 
